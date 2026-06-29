@@ -1,0 +1,4 @@
+name = "semogwa"
+main = "semogwa_worker.js"
+compatibility_date = "2026-05-25"
+compatibility_flags = ["nodejs_compat"]
