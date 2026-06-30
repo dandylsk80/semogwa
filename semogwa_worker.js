@@ -499,17 +499,23 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .scard p{font-size:12.5px;color:var(--muted);text-align:center;line-height:1.5}
 @media(max-width:600px){.scard{width:30%;min-width:104px}.scard .e{width:72px;height:72px;border-radius:22px;font-size:33px}.scard p{display:none}}
 .howrow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
-.howrow .hc{position:relative;background:#eee center/cover no-repeat;border:0;border-radius:20px;padding:34px 20px;text-align:center;box-shadow:0 16px 34px -16px rgba(60,30,10,.4);color:#fff;min-height:210px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
-.howrow .hc::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(35,20,10,.28),rgba(35,20,10,.66))}
+.howrow .hc{position:relative;background:transparent center/cover no-repeat;border:0;border-radius:10px;padding:34px 20px;text-align:center;box-shadow:none;color:#fff;min-height:230px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent 100%);mask:linear-gradient(90deg,transparent 0,#000 16%,#000 84%,transparent 100%)}
+.howrow .hc::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,18,8,.18),rgba(30,18,8,.5))}
 .howrow .hc>*{position:relative;z-index:1}
 .howrow .hc .num{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ff5a1f,#ff9d2e);color:#fff;font-weight:900;display:grid;place-items:center;margin:0 auto 12px;font-size:18px;box-shadow:0 6px 14px -4px rgba(0,0,0,.4)}
-.howrow .hc b{font-size:17px;display:block;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4)}.howrow .hc p{font-size:13.5px;color:rgba(255,255,255,.92);margin-top:6px;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.howrow .hc b{font-size:17px;display:block;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.65)}.howrow .hc p{font-size:13.5px;color:rgba(255,255,255,.95);margin-top:6px;text-shadow:0 2px 8px rgba(0,0,0,.65)}
 .whyrow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
-.wc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow)}
-.wc .e{width:56px;height:56px;border-radius:15px;background:var(--soft) center/cover no-repeat;box-shadow:0 8px 18px -8px rgba(120,70,30,.3)}.wc h3{font-size:17px;font-weight:800;margin-top:10px}.wc p{font-size:13.5px;color:var(--muted);margin-top:6px;line-height:1.6}
+.wc{position:relative;background:#ddd center/cover no-repeat;border:0;border-radius:20px;padding:26px 22px;box-shadow:0 16px 34px -16px rgba(60,30,10,.4);color:#fff;min-height:210px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+.wc::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,18,8,.12) 30%,rgba(30,18,8,.72))}
+.wc>*{position:relative;z-index:1}
+.wc h3{font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6)}.wc p{font-size:13.5px;color:rgba(255,255,255,.95);margin-top:6px;line-height:1.6;text-shadow:0 2px 8px rgba(0,0,0,.6)}
 .regpills{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:28px}
 .regpills a{background:#fff;border:1px solid var(--line);border-radius:999px;padding:11px 20px;font-weight:700;font-size:14.5px;box-shadow:var(--shadow);transition:transform .12s}
 .regpills a:hover{transform:translateY(-2px);border-color:var(--brand);color:#e0510e}
+.ctasec{background:#e0510e center/cover no-repeat;padding:80px 24px;text-align:center;color:#fff}
+.ctasec h2{color:#fff;font-size:clamp(26px,4vw,38px);font-weight:900;text-shadow:0 2px 16px rgba(0,0,0,.3)}
+.ctasec p{color:rgba(255,255,255,.96);margin-top:12px;font-size:16px;text-shadow:0 1px 10px rgba(0,0,0,.3)}
+.ctasec .btn{margin-top:24px;background:#fff;color:#e0510e;font-size:16px;padding:16px 34px;font-weight:800;box-shadow:0 14px 30px -10px rgba(0,0,0,.35)}
 .ctaband{background:linear-gradient(135deg,#ff5a1f,#ff9d2e);border-radius:28px;padding:48px 32px;text-align:center;color:#fff;box-shadow:0 24px 50px -20px rgba(255,90,31,.55)}
 .ctaband h2{color:#fff;font-size:clamp(24px,3.5vw,32px)}.ctaband p{color:rgba(255,255,255,.95);margin-top:10px;font-size:16px}
 .ctaband .btn{margin-top:22px;background:#fff;color:#e0510e;font-size:16px;padding:15px 32px;font-weight:800}
@@ -635,10 +641,6 @@ ${body}${footer()}${fab()}${formModal()}<script>${JS}</script></body></html>`;
 }
 function footer(){
   return `<footer class="foot"><div class="wrap"><a href="/" class="logo"><span class="mk">1:1</span><span class="wm">세상의<b>모든</b>과외</span></a>
-  <div class="cols">
-  <div><b>지역</b><div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
-  <a href="/regions">📍 전체지역</a></div></div>
-  <div><b>바로가기</b><div style="margin-top:8px;display:flex;flex-direction:column;gap:6px"><a href="/regions"><b style="color:#ffb98a">📍 전체 지역 보기</b></a><a href="/">홈</a></div></div></div>
   <div style="margin-top:20px"><a href="/regions" style="display:inline-block;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-weight:700;padding:12px 22px;border-radius:999px">전국 ${regions.length.toLocaleString()}개 지역 전체보기 →</a></div>
   <p class="small">${SITE} · 전국 방문·화상 1:1 과외 매칭 · 상담문의 010-6834-8080<br>국어·영어·수학·사회·과학 / 전국 ${regions.length.toLocaleString()}개 지역</p></div></footer>`;
 }
@@ -712,12 +714,12 @@ function pageHome(){
 <section class="sec"><div class="wrap">
   <div class="sec-head"><div class="k">WHY SEMOGWA</div><h2>왜 세상의모든과외일까요</h2></div>
   <div class="whyrow">
-    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}21.jpg')"></div><h3>방문 · 화상 모두</h3><p>대면이 편하면 방문, 시간을 아끼려면 화상. 상황에 맞게 고르세요.</p></div>
-    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}22.jpg')"></div><h3>1:1 맞춤</h3><p>학생 한 명에게 모든 시간이 집중되는 진짜 개별 수업입니다.</p></div>
-    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}23.jpg')"></div><h3>검증된 선생님</h3><p>학력·경력을 확인한 선생님을 지역·과목에 맞춰 매칭합니다.</p></div>
-    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}24.jpg')"></div><h3>전국 매칭</h3><p>가까운 곳에 선생님이 없어도 화상으로 전국 어디든 연결됩니다.</p></div>
-    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}25.jpg')"></div><h3>합리적 비용</h3><p>약점만 집중하는 1:1이라 들인 비용 대비 효과가 큽니다.</p></div>
-    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}26.jpg')"></div><h3>꼼꼼한 관리</h3><p>매 수업 이해도를 점검하고 학습 상태를 부모님께 전해드립니다.</p></div>
+    <div class="wc" style="background-image:url('${IMG_MAIN}21.jpg')"><h3>방문 · 화상 모두</h3><p>대면이 편하면 방문, 시간을 아끼려면 화상. 상황에 맞게 고르세요.</p></div>
+    <div class="wc" style="background-image:url('${IMG_MAIN}22.jpg')"><h3>1:1 맞춤</h3><p>학생 한 명에게 모든 시간이 집중되는 진짜 개별 수업입니다.</p></div>
+    <div class="wc" style="background-image:url('${IMG_MAIN}23.jpg')"><h3>검증된 선생님</h3><p>학력·경력을 확인한 선생님을 지역·과목에 맞춰 매칭합니다.</p></div>
+    <div class="wc" style="background-image:url('${IMG_MAIN}24.jpg')"><h3>전국 매칭</h3><p>가까운 곳에 선생님이 없어도 화상으로 전국 어디든 연결됩니다.</p></div>
+    <div class="wc" style="background-image:url('${IMG_MAIN}25.jpg')"><h3>합리적 비용</h3><p>약점만 집중하는 1:1이라 들인 비용 대비 효과가 큽니다.</p></div>
+    <div class="wc" style="background-image:url('${IMG_MAIN}26.jpg')"><h3>꼼꼼한 관리</h3><p>매 수업 이해도를 점검하고 학습 상태를 부모님께 전해드립니다.</p></div>
   </div>
 </div></section>
 
@@ -726,10 +728,10 @@ function pageHome(){
   <div class="regpills"><a href="/regions" style="background:linear-gradient(135deg,#e0480a,#ff6a14);color:#fff;border:0;padding:14px 28px;font-size:15px">📍 전체 지역에서 찾기 →</a></div>
 </div></section>
 
-<section class="sec"><div class="wrap">
-  <div class="ctaband"><h2>지금 바로 시작하세요</h2><p>상담은 무료입니다. 조건만 남겨주시면 맞는 선생님을 찾아 연락드립니다.</p>
-  <button class="btn" onclick="openForm()">무료 상담 신청하기 →</button></div>
-</div></section>`;
+<section class="ctasec" style="background-image:linear-gradient(135deg,rgba(224,72,10,.82),rgba(255,140,40,.7)),url('${IMG_MAIN}33.jpg')">
+  <h2>지금 바로 시작하세요</h2><p>상담은 무료입니다. 조건만 남겨주시면 맞는 선생님을 찾아 연락드립니다.</p>
+  <button class="btn" onclick="openForm()">무료 상담 신청하기 →</button>
+</section>`;
   return layout({title:`${SITE} · 전국 방문·화상 1:1 과외 매칭`,desc:`전국 ${regions.length.toLocaleString()}개 동네 어디서나 국·영·수·사·과 1:1 과외. 검증된 선생님을 방문·화상으로 연결합니다. 무료 상담 신청.`,canonical:ORIGIN+"/",body,ld,image:heroImg});
 }
 
