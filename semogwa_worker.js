@@ -675,9 +675,9 @@ function layout({title,desc,canonical,body,ld,image}){
 ${body}${footer()}${fab()}${formModal()}<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script><script>${JS}</script></body></html>`;
 }
 function footer(){
-  return `<footer class="foot"><div class="wrap"><a href="/" class="logo"><span class="mk">1:1</span><span class="wm">세상의<b>모든</b>과외</span></a>
+  return `<footer class="foot"><div class="wrap"><div class="bodycol"><a href="/" class="logo"><span class="mk">1:1</span><span class="wm">세상의<b>모든</b>과외</span></a>
   <div style="margin-top:20px"><a href="/regions" style="display:inline-block;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-weight:700;padding:12px 22px;border-radius:999px">전국 ${regions.length.toLocaleString()}개 지역 전체보기 →</a></div>
-  <p class="small">${SITE} · 전국 방문·화상 1:1 과외 매칭 · 상담문의 010-6834-8080<br>국어·영어·수학·사회·과학 / 전국 ${regions.length.toLocaleString()}개 지역</p></div></footer>`;
+  <p class="small">${SITE} · 전국 방문·화상 1:1 과외 매칭 · 상담문의 010-6834-8080<br>국어·영어·수학·사회·과학 / 전국 ${regions.length.toLocaleString()}개 지역</p></div></div></footer>`;
 }
 function fab(){
   return `<div class="fab">
