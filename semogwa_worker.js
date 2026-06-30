@@ -653,6 +653,7 @@ function layout({title,desc,canonical,body,ld,image}){
     SUBJECTS.map(s=>({"@context":"https://schema.org","@type":"SiteNavigationElement","name":s.name+" 과외","url":ORIGIN+"/"+s.slug}))].flat());
   return `<!DOCTYPE html><html lang="ko"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="naver-site-verification" content="f11d70c2a8f7f36a7cb904c23488ff8a8201fcc9" />
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${esc(canonical)}">
 <link rel="alternate" type="application/rss+xml" title="${SITE}" href="${ORIGIN}/rss.xml">
