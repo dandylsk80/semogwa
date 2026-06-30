@@ -93,8 +93,8 @@ function vCallout(txt){ return `<div class="callout"><span class="ico">📌</spa
 function vICards(arr){
   return `<div class="icards">${arr.map(c=>`<div class="ic2"><div class="e">${c.e}</div><b>${c.b}</b><span>${c.s}</span></div>`).join("")}</div>`;
 }
-// 이미지 (깃허브 영상 폴더 → jsDelivr CDN). 페이지마다 해시로 다른 사진
-const IMG_BASE = "https://cdn.jsdelivr.net/gh/dandylsk80/semogwa@main/%EC%98%81%EC%83%81/";
+// 썸네일 이미지 (image/ 폴더의 pexels 사진 — 영문 경로, CDN 로딩 확실). 페이지마다 해시로 다른 사진
+const IMG_BASE = "https://cdn.jsdelivr.net/gh/dandylsk80/semogwa@main/image/";
 const IMAGES = [
 "pexels-alfomedeiros-21482854.jpg","pexels-amaria-10990004.jpg","pexels-chipi1189-33964549.jpg",
 "pexels-gu-ko-2150570603-32274998.jpg","pexels-gu-ko-2150570603-35376358.jpg","pexels-ian-panelo-7264404.jpg",
@@ -103,7 +103,6 @@ const IMAGES = [
 "pexels-miniperde-33872172.jpg","pexels-ninosouza-716644.jpg","pexels-pixabay-256417.jpg",
 "pexels-pixabay-256491.jpg","pexels-pixabay-256502.jpg","pexels-ron-lach-9871139.jpg",
 "pexels-ronaldo-guiraldelli-2110705-13042101.jpg","pexels-samarmourya-12365550.jpg",
-"pexels-soc-nang-d-ng-2150345854-34438590.jpg","pexels-soc-nang-d-ng-2150345854-34438594.jpg",
 "pexels-suzyhazelwood-1098656.jpg","pexels-thu-ngan-pham-550524329-18344347.jpg","pexels-tima-miroshnichenko-9572664.jpg",
 "pexels-tokki-papa-1095148033-20689095.jpg","pexels-won-jong-lee-1966375686-29956386.jpg",
 "pexels-yangjunjun2-3353747-10906759.jpg","pexels-yaroslav-shuraev-9489804.jpg",
@@ -489,6 +488,8 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .htrust{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;justify-content:center}
 .htrust span{font-size:13px;color:#a3500f;background:#fff5ee;border:1px solid #ffe0c7;border-radius:999px;padding:7px 13px;font-weight:600}
 .heroimg{margin-top:40px;border-radius:24px;aspect-ratio:24/9;background-size:cover;background-position:center 35%;box-shadow:0 30px 60px -24px rgba(120,70,30,.4);position:relative}
+.herovid{margin-top:40px;border-radius:24px;overflow:hidden;aspect-ratio:16/9;position:relative;background:#000;box-shadow:0 30px 60px -24px rgba(120,70,30,.45)}
+.herovid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .subjcards{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:36px}
 .scard{display:flex;flex-direction:column;align-items:center;gap:14px;width:150px;padding:18px 10px;border-radius:22px;transition:background .15s,transform .15s}
 .scard:hover{background:#fff;transform:translateY(-4px);box-shadow:var(--shadow)}
@@ -498,12 +499,14 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .scard p{font-size:12.5px;color:var(--muted);text-align:center;line-height:1.5}
 @media(max-width:600px){.scard{width:30%;min-width:104px}.scard .e{width:72px;height:72px;border-radius:22px;font-size:33px}.scard p{display:none}}
 .howrow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
-.howrow .hc{background:#fff center/cover no-repeat;border:1px solid var(--line);border-radius:18px;padding:28px 24px;text-align:center;box-shadow:var(--shadow)}
-.howrow .hc .num{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-weight:900;display:grid;place-items:center;margin:0 auto 12px;font-size:18px}
-.howrow .hc b{font-size:16px;display:block}.howrow .hc p{font-size:13.5px;color:var(--muted);margin-top:6px}
-.whyrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;margin-top:32px}
+.howrow .hc{position:relative;background:#eee center/cover no-repeat;border:0;border-radius:20px;padding:34px 20px;text-align:center;box-shadow:0 16px 34px -16px rgba(60,30,10,.4);color:#fff;min-height:210px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.howrow .hc::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(35,20,10,.28),rgba(35,20,10,.66))}
+.howrow .hc>*{position:relative;z-index:1}
+.howrow .hc .num{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ff5a1f,#ff9d2e);color:#fff;font-weight:900;display:grid;place-items:center;margin:0 auto 12px;font-size:18px;box-shadow:0 6px 14px -4px rgba(0,0,0,.4)}
+.howrow .hc b{font-size:17px;display:block;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4)}.howrow .hc p{font-size:13.5px;color:rgba(255,255,255,.92);margin-top:6px;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.whyrow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
 .wc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow)}
-.wc .e{font-size:28px}.wc h3{font-size:17px;font-weight:800;margin-top:10px}.wc p{font-size:13.5px;color:var(--muted);margin-top:6px;line-height:1.6}
+.wc .e{width:56px;height:56px;border-radius:15px;background:var(--soft) center/cover no-repeat;box-shadow:0 8px 18px -8px rgba(120,70,30,.3)}.wc h3{font-size:17px;font-weight:800;margin-top:10px}.wc p{font-size:13.5px;color:var(--muted);margin-top:6px;line-height:1.6}
 .regpills{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:28px}
 .regpills a{background:#fff;border:1px solid var(--line);border-radius:999px;padding:11px 20px;font-weight:700;font-size:14.5px;box-shadow:var(--shadow);transition:transform .12s}
 .regpills a:hover{transform:translateY(-2px);border-color:var(--brand);color:#e0510e}
@@ -511,7 +514,7 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .ctaband h2{color:#fff;font-size:clamp(24px,3.5vw,32px)}.ctaband p{color:rgba(255,255,255,.95);margin-top:10px;font-size:16px}
 .ctaband .btn{margin-top:22px;background:#fff;color:#e0510e;font-size:16px;padding:15px 32px;font-weight:800}
 .sec-head{text-align:center}.sec-head .k{font-size:12.5px;font-weight:800;color:#e0510e;letter-spacing:.08em}
-@media(max-width:860px){.howrow{grid-template-columns:1fr}}
+@media(max-width:860px){.howrow{grid-template-columns:1fr}.whyrow{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.heroimg{aspect-ratio:16/10;margin-top:30px}.bhero{padding:40px 0 4px}}
 .sec{padding:52px 0}.sec.alt{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .sec h2{font-size:clamp(22px,3.5vw,30px);font-weight:900;letter-spacing:-.02em;text-align:center}
@@ -689,7 +692,7 @@ function pageHome(){
   <p class="sub">방문이든 화상이든, 국·영·수·사·과 검증된 선생님을 1:1로 연결해 드립니다. 전국 ${regions.length.toLocaleString()}개 지역 어디서나.</p>
   <div class="hero-cta"><button class="btn btn-w" onclick="openForm()">무료 상담 신청</button><a class="btn btn-g" href="/regions">우리 지역 찾기 →</a></div>
   <div class="htrust"><span>✅ 검증된 선생님</span><span>🏠 방문·화상 모두</span><span>🎯 1:1 맞춤</span><span>🎁 무료 상담</span></div>
-  <div class="heroimg" style="background-image:linear-gradient(180deg,rgba(44,32,24,.05),rgba(44,32,24,.18)),url('${heroImg}')"></div>
+  <div class="herovid"><iframe src="https://www.youtube.com/embed/Tbl5XkprBf0?rel=0&modestbranding=1" title="세상의모든과외 소개" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
 </div></section>
 
 <section class="sec"><div class="wrap">
@@ -700,19 +703,21 @@ function pageHome(){
 <section class="sec alt"><div class="wrap">
   <div class="sec-head"><div class="k">HOW IT WORKS</div><h2>3단계로 시작해요</h2></div>
   <div class="howrow">
-    <div class="hc" style="background-image:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.93)),url('${IMG_MAIN}11.jpg')"><div class="num">1</div><b>무료 상담 신청</b><p>학년·과목·지역·목표를 남겨주세요.</p></div>
-    <div class="hc" style="background-image:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.93)),url('${IMG_MAIN}12.jpg')"><div class="num">2</div><b>맞춤 선생님 매칭</b><p>조건에 맞는 검증된 선생님을 연결합니다.</p></div>
-    <div class="hc" style="background-image:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.93)),url('${IMG_MAIN}13.jpg')"><div class="num">3</div><b>수업 시작</b><p>방문 또는 화상으로 1:1 수업을 시작해요.</p></div>
+    <div class="hc" style="background-image:url('${IMG_MAIN}11.jpg')"><div class="num">1</div><b>무료 상담 신청</b><p>학년·과목·지역·목표를 남겨주세요.</p></div>
+    <div class="hc" style="background-image:url('${IMG_MAIN}12.jpg')"><div class="num">2</div><b>맞춤 선생님 매칭</b><p>조건에 맞는 검증된 선생님을 연결합니다.</p></div>
+    <div class="hc" style="background-image:url('${IMG_MAIN}13.jpg')"><div class="num">3</div><b>수업 시작</b><p>방문 또는 화상으로 1:1 수업을 시작해요.</p></div>
   </div>
 </div></section>
 
 <section class="sec"><div class="wrap">
   <div class="sec-head"><div class="k">WHY SEMOGWA</div><h2>왜 세상의모든과외일까요</h2></div>
   <div class="whyrow">
-    <div class="wc"><div class="e">🏠</div><h3>방문 · 화상 모두</h3><p>대면이 편하면 방문, 시간을 아끼려면 화상. 상황에 맞게 고르세요.</p></div>
-    <div class="wc"><div class="e">🎯</div><h3>1:1 맞춤</h3><p>학생 한 명에게 모든 시간이 집중되는 진짜 개별 수업입니다.</p></div>
-    <div class="wc"><div class="e">✅</div><h3>검증된 선생님</h3><p>학력·경력을 확인한 선생님을 지역·과목에 맞춰 매칭합니다.</p></div>
-    <div class="wc"><div class="e">🌍</div><h3>전국 매칭</h3><p>가까운 곳에 선생님이 없어도 화상으로 전국 어디든 연결됩니다.</p></div>
+    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}21.jpg')"></div><h3>방문 · 화상 모두</h3><p>대면이 편하면 방문, 시간을 아끼려면 화상. 상황에 맞게 고르세요.</p></div>
+    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}22.jpg')"></div><h3>1:1 맞춤</h3><p>학생 한 명에게 모든 시간이 집중되는 진짜 개별 수업입니다.</p></div>
+    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}23.jpg')"></div><h3>검증된 선생님</h3><p>학력·경력을 확인한 선생님을 지역·과목에 맞춰 매칭합니다.</p></div>
+    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}24.jpg')"></div><h3>전국 매칭</h3><p>가까운 곳에 선생님이 없어도 화상으로 전국 어디든 연결됩니다.</p></div>
+    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}25.jpg')"></div><h3>합리적 비용</h3><p>약점만 집중하는 1:1이라 들인 비용 대비 효과가 큽니다.</p></div>
+    <div class="wc"><div class="e" style="background-image:url('${IMG_MAIN}26.jpg')"></div><h3>꼼꼼한 관리</h3><p>매 수업 이해도를 점검하고 학습 상태를 부모님께 전해드립니다.</p></div>
   </div>
 </div></section>
 
