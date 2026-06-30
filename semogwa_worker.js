@@ -550,13 +550,13 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .ctaband p{color:rgba(255,255,255,.96);margin-top:12px;font-size:16px;text-shadow:0 1px 10px rgba(0,0,0,.5)}
 .ctaband .btn{margin-top:24px;background:#fff;color:#e0510e;font-size:16px;padding:16px 34px;font-weight:800;box-shadow:0 14px 30px -10px rgba(0,0,0,.4)}
 .sec-head{text-align:center}.sec-head .k{font-size:12.5px;font-weight:800;color:#e0510e;letter-spacing:.08em}
-@media(max-width:860px){.howrow{grid-template-columns:1fr}.whyrow{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.heroimg{aspect-ratio:16/10;margin-top:30px}.bhero{padding:40px 0 4px}}
+@media(max-width:860px){.howrow{grid-template-columns:1fr}.whyrow{grid-template-columns:repeat(2,1fr)}.subj-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.heroimg{aspect-ratio:16/10;margin-top:30px}.bhero{padding:40px 0 4px}.subj-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .sec{padding:52px 0}.sec.alt{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .sec h2{font-size:clamp(22px,3.5vw,30px);font-weight:900;letter-spacing:-.02em;text-align:center}
 .sec .lead{text-align:center;color:#6b5d50;margin-top:10px;max-width:560px;margin:10px auto 0}
 .grid{display:grid;gap:16px;margin-top:30px}
-.subj-grid{grid-template-columns:repeat(auto-fill,200px);justify-content:start}
+.subj-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
 .feat-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow);transition:transform .15s;display:block}
 .card:hover{transform:translateY(-4px)}
@@ -566,6 +566,7 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .thumb .kw{align-self:flex-start;background:#fff;color:var(--brand);font-weight:800;font-size:13px;padding:6px 14px;border-radius:999px;margin-bottom:12px;box-shadow:var(--shadow)}
 .thumb h1{font-size:clamp(22px,4vw,36px);font-weight:900;letter-spacing:-.03em;line-height:1.18;color:#3a2415}
 .article{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:30px 34px;box-shadow:var(--shadow);margin:22px auto 0;max-width:740px}
+.bodycol{max-width:740px;margin:0 auto}
 .article h2{font-size:21px;font-weight:800;margin:26px 0 8px;letter-spacing:-.02em}.article h2:first-child{margin-top:0}
 .article p{color:#5a4d42;font-size:15.5px;line-height:1.95;margin-top:8px}
 .faq{margin-top:6px}
@@ -616,14 +617,13 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .chips a{background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600}
 .chips a:hover{border-color:var(--brand);color:var(--brand)}
-.dir details{margin-top:12px}
-.dir .lv1>summary{cursor:pointer;font-size:18px;font-weight:800;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;list-style:none;box-shadow:var(--shadow)}
-.dir summary::-webkit-details-marker{display:none}
-.dir .sido-all{display:inline-block;margin:10px 0 2px 4px;font-weight:800;color:var(--brand);font-size:14px}
-.dir .lv2{margin:10px 0 0 8px}.dir .lv2>summary{cursor:pointer;font-weight:700;color:#6b5d50;padding:8px 0;list-style:none}
-.dir .dongs{display:flex;flex-wrap:wrap;gap:7px;padding:6px 0 8px 12px}
-.dir .dongs a{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:13px}
-.dir .dongs a:hover{border-color:var(--brand);color:var(--brand)}
+.dir{margin-top:16px;display:flex;flex-direction:column;gap:16px}
+.sidoblk{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow)}
+.sido-head{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;color:#3a2415}
+.sido-head span{font-size:13px;font-weight:700;color:var(--brand)}
+.gu-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.gu-chips a{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 13px;font-size:13.5px}
+.gu-chips a:hover{border-color:var(--brand);color:var(--brand)}
 .foot{background:#2c2018;color:#cdbbac;padding:40px 0;margin-top:40px;font-size:14px}
 .foot .logo{color:#fff}.foot a{color:#e9d9c8}
 .foot .cols{display:flex;flex-wrap:wrap;gap:30px;margin-top:18px}
@@ -819,11 +819,12 @@ function pageSido(sd){
 ${thumb(null, esc(sd.name)+" 과외", esc(sd.name)+"<br>1:1 과외 (국영수사과)")}
 <article class="article">${art}
 <div class="trial"><b>${esc(sd.name)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sd.name)}','')">상담 신청하기 →</button></div></article>
+<div class="bodycol">
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sd.name)} 과목별 과외</h2>
 <div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${sd.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${sd.name} ${s.name}</h3><p>${sd.name} ${s.name} 과외</p></a>`).join("")}</div>
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sd.name)} 시·군·구</h2>
 <div class="chips">${sidoChildren(sd).map(c=>`<a href="/${c.slug}">${esc(c.label)}</a>`).join("")}</div>
-</div></section>`;
+</div></div></section>`;
   return layout({title:`${sd.name} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${sd.name} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.full} 시·군·구별 검증된 선생님을 연결합니다. 무료 상담.`,canonical:`${ORIGIN}/${sd.slug}`,body,ld});
 }
 
@@ -891,10 +892,11 @@ function pageGu(g){
 ${thumb(null, esc(g.sigungu)+" 과외", esc(g.sigungu)+"<br>1:1 과외 (국영수사과)")}
 <article class="article">${art}
 <div class="trial"><b>${esc(g.sigungu)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(g.sigungu)}','')">상담 신청하기 →</button></div></article>
+<div class="bodycol">
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(g.sigungu)} 과목별 과외</h2>
 <div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${g.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(g.sigungu)} ${s.name}</h3><p>${esc(g.sigungu)} ${s.name} 과외</p></a>`).join("")}</div>
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(g.sigungu)} 동네별 과외</h2>
-<div class="chips">${dongs.map(d=>`<a href="/${d.slug}">${esc(d.dong)}</a>`).join("")}</div></div></section>`;
+<div class="chips">${dongs.map(d=>`<a href="/${d.slug}">${esc(d.dong)}</a>`).join("")}</div></div></div></section>`;
   return layout({title:`${g.sigungu} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${g.sigungu} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.name} ${g.sigungu} 동네별 검증된 선생님 연결. 무료 상담.`,canonical:`${ORIGIN}/${g.slug}`,body,ld});
 }
 
@@ -912,10 +914,11 @@ function pageCity(c){
 ${thumb(null, esc(c.city)+" 과외", esc(c.city)+"<br>1:1 과외 (국영수사과)")}
 <article class="article">${art}
 <div class="trial"><b>${esc(c.city)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(c.city)}','')">상담 신청하기 →</button></div></article>
+<div class="bodycol">
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(c.city)} 과목별 과외</h2>
 <div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${c.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(c.city)} ${s.name}</h3><p>${esc(c.city)} ${s.name} 과외</p></a>`).join("")}</div>
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(c.city)} 구별 과외</h2>
-<div class="chips">${gus.map(g=>`<a href="/${g.slug}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a>`).join("")}</div></div></section>`;
+<div class="chips">${gus.map(g=>`<a href="/${g.slug}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a>`).join("")}</div></div></div></section>`;
   return layout({title:`${c.city} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${c.city} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.name} ${c.city} 구별 검증된 선생님 연결. 무료 상담.`,canonical:`${ORIGIN}/${c.slug}`,body,ld});
 }
 
@@ -1028,9 +1031,10 @@ function pageRegion(r){
 ${thumb(null, esc(sn)+" 과외", esc(sn)+"<br>1:1 과외 (국영수사과)")}
 <article class="article">${art}
 <div class="trial"><b>${esc(sn)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sn)}','')">상담 신청하기 →</button></div></article>
+<div class="bodycol">
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sn)} 과목별 과외</h2>
 <div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${r.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${s.name}</h3><p>${esc(sn)} ${s.name} 과외</p></a>`).join("")}</div>
-<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(r.sigungu)} 다른 동네</h2>${nearbyDongs(r,"")}</div></section>`;
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(r.sigungu)} 다른 동네</h2>${nearbyDongs(r,"")}</div></div></section>`;
   return layout({title:`${sn} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${sn} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sn} 검증된 선생님을 연결합니다. 무료 상담.`,canonical:`${ORIGIN}/${r.slug}`,body,ld});
 }
 
@@ -1059,23 +1063,11 @@ function pageRegions(){
   for (const sd of SIDO_LIST){
     const children=sidoChildren(sd);
     if(!children.length) continue;
-    let inner="";
-    for (const ch of children){
-      const dongHtml=ds=>ds.map(d=>`<a href="/${d.slug}">${esc(d.dong)}</a>`).join("");
-      if(CITY_MAP[ch.slug]){
-        const c=CITY_MAP[ch.slug]; let gx="";
-        for(const gs of c.gus){ const g=GU_MAP[gs]; const dongs=DONGS_OF_GU[gs]||[];
-          gx+=`<details class="lv2"><summary><a href="/${gs}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a> (${dongs.length})</summary><div class="dongs">${dongHtml(dongs)}</div></details>`; }
-        inner+=`<details class="lv2"><summary><a href="/${c.slug}">${esc(c.city)}</a></summary>${gx}</details>`;
-      } else {
-        const g=GU_MAP[ch.slug]; const dongs=DONGS_OF_GU[ch.slug]||[];
-        inner+=`<details class="lv2"><summary><a href="/${ch.slug}">${esc(g.sigungu)}</a> (${dongs.length})</summary><div class="dongs">${dongHtml(dongs)}</div></details>`;
-      }
-    }
-    dir+=`<details class="lv1"><summary>${esc(sd.name)}</summary><a class="sido-all" href="/${sd.slug}">${esc(sd.name)} 과외 전체 보기 →</a>${inner}</details>`;
+    const chips=children.map(ch=>`<a href="/${ch.slug}">${esc(ch.label)}</a>`).join("");
+    dir+=`<div class="sidoblk"><a class="sido-head" href="/${sd.slug}">${esc(sd.name)} 과외 <span>전체 보기 →</span></a><div class="gu-chips">${chips}</div></div>`;
   }
   const body=`<section class="sec"><div class="wrap"><div class="bc" style="padding-bottom:8px"><a href="/">홈</a> › 전국 지역</div>
-  <h2 style="text-align:left">전국 과외 지역</h2><p style="color:#6b5d50;margin-top:8px">전국 ${regions.length.toLocaleString()}개 동·읍·면에서 1:1 과외를 매칭합니다. 지역을 선택하세요.</p>
+  <h2 style="text-align:left">전국 과외 지역</h2><p style="color:#6b5d50;margin-top:8px">전국 ${regions.length.toLocaleString()}개 동·읍·면에서 1:1 과외를 매칭합니다. 시도를 누르면 해당 지역 과외 페이지로 이동합니다.</p>
   <div class="dir">${dir}</div></div></section>`;
   return layout({title:`전국 과외 지역 (${regions.length.toLocaleString()}개) | ${SITE}`,desc:`전국 ${regions.length.toLocaleString()}개 지역 1:1 과외 매칭. 시도·시군구·동별로 방문·화상 과외 선생님을 찾아보세요.`,canonical:`${ORIGIN}/regions`,body,ld:null});
 }
