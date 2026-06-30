@@ -655,6 +655,7 @@ function layout({title,desc,canonical,body,ld,image}){
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${esc(canonical)}">
+<link rel="alternate" type="application/rss+xml" title="${SITE}" href="${ORIGIN}/rss.xml">
 <meta property="article:published_time" content="${D.pubISO}"><meta property="article:modified_time" content="${D.modISO}">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${esc(canonical)}">
@@ -1101,6 +1102,18 @@ function sitemapPart(i){
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sl.map(u=>`<url><loc>${u}</loc></url>`).join("\n")}\n</urlset>`;
 }
 function robots(){return `User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n`;}
+function rssFeed(){
+  const base=[];
+  for(const sd of SIDO_LIST) base.push({u:`/${sd.slug}`,t:`${sd.name} 1:1 과외`});
+  for(const cs in CITY_MAP) base.push({u:`/${cs}`,t:`${CITY_MAP[cs].city} 1:1 과외`});
+  for(const gs in GU_MAP) base.push({u:`/${gs}`,t:`${GU_MAP[gs].sigungu} 1:1 과외`});
+  for(const r of regions) base.push({u:`/${r.slug}`,t:`${shortName(r.name)} 1:1 과외`});
+  const items=base.slice(0,1000).map(it=>{
+    const d=pageDates(it.u);
+    return `<item><title>${esc(it.t)}</title><link>${ORIGIN}${it.u}</link><guid>${ORIGIN}${it.u}</guid><pubDate>${new Date(d.modISO).toUTCString()}</pubDate><description>${esc(it.t)} · 방문·화상 1:1 과외 매칭. 국어·영어·수학·사회·과학.</description></item>`;
+  }).join("");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>${SITE}</title><link>${ORIGIN}</link><description>전국 방문·화상 1:1 과외 매칭 · 국어·영어·수학·사회·과학</description><language>ko</language>${items}</channel></rss>`;
+}
 const SVG_FAVICON='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0480a"/><stop offset="1" stop-color="#ff8a2e"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="#fff"/><text x="32" y="46" font-family="Montserrat,Arial,sans-serif" font-size="34" font-weight="900" font-style="italic" letter-spacing="-2" text-anchor="middle" fill="url(#g)">1:1</text></svg>';
 
 async function handleInquiry(request, env){
@@ -1117,6 +1130,7 @@ export default {
     if(request.method==="POST"&&path==="/api/inquiry") return handleInquiry(request,env);
     if(path==="/favicon.svg") return new Response(SVG_FAVICON,{headers:{"content-type":"image/svg+xml","cache-control":"public, max-age=604800"}});
     if(path==="/robots.txt") return new Response(robots(),{headers:{"content-type":"text/plain;charset=UTF-8"}});
+    if(path==="/rss.xml") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
     if(path==="/sitemap.xml") return new Response(sitemapIndex(),{headers:{"content-type":"application/xml;charset=UTF-8"}});
     const sm=path.match(/^\/sitemap-(\d+)\.xml$/);
     if(sm){const p=sitemapPart(parseInt(sm[1],10)); if(p) return new Response(p,{headers:{"content-type":"application/xml;charset=UTF-8"}}); return html(page404(),404);}
