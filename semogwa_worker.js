@@ -512,13 +512,10 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .regpills{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:28px}
 .regpills a{background:#fff;border:1px solid var(--line);border-radius:999px;padding:11px 20px;font-weight:700;font-size:14.5px;box-shadow:var(--shadow);transition:transform .12s}
 .regpills a:hover{transform:translateY(-2px);border-color:var(--brand);color:#e0510e}
-.ctasec{background:#e0510e center/cover no-repeat;padding:80px 24px;text-align:center;color:#fff}
-.ctasec h2{color:#fff;font-size:clamp(26px,4vw,38px);font-weight:900;text-shadow:0 2px 16px rgba(0,0,0,.3)}
-.ctasec p{color:rgba(255,255,255,.96);margin-top:12px;font-size:16px;text-shadow:0 1px 10px rgba(0,0,0,.3)}
-.ctasec .btn{margin-top:24px;background:#fff;color:#e0510e;font-size:16px;padding:16px 34px;font-weight:800;box-shadow:0 14px 30px -10px rgba(0,0,0,.35)}
-.ctaband{background:linear-gradient(135deg,#ff5a1f,#ff9d2e);border-radius:28px;padding:48px 32px;text-align:center;color:#fff;box-shadow:0 24px 50px -20px rgba(255,90,31,.55)}
-.ctaband h2{color:#fff;font-size:clamp(24px,3.5vw,32px)}.ctaband p{color:rgba(255,255,255,.95);margin-top:10px;font-size:16px}
-.ctaband .btn{margin-top:22px;background:#fff;color:#e0510e;font-size:16px;padding:15px 32px;font-weight:800}
+.ctaband{background:#2c2018 center/cover no-repeat;border-radius:28px;padding:60px 32px;text-align:center;color:#fff;box-shadow:0 24px 50px -20px rgba(60,30,10,.45);overflow:hidden}
+.ctaband h2{color:#fff;font-size:clamp(26px,4vw,38px);font-weight:900;text-shadow:0 2px 14px rgba(0,0,0,.5)}
+.ctaband p{color:rgba(255,255,255,.96);margin-top:12px;font-size:16px;text-shadow:0 1px 10px rgba(0,0,0,.5)}
+.ctaband .btn{margin-top:24px;background:#fff;color:#e0510e;font-size:16px;padding:16px 34px;font-weight:800;box-shadow:0 14px 30px -10px rgba(0,0,0,.4)}
 .sec-head{text-align:center}.sec-head .k{font-size:12.5px;font-weight:800;color:#e0510e;letter-spacing:.08em}
 @media(max-width:860px){.howrow{grid-template-columns:1fr}.whyrow{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.heroimg{aspect-ratio:16/10;margin-top:30px}.bhero{padding:40px 0 4px}}
@@ -728,10 +725,12 @@ function pageHome(){
   <div class="regpills"><a href="/regions" style="background:linear-gradient(135deg,#e0480a,#ff6a14);color:#fff;border:0;padding:14px 28px;font-size:15px">📍 전체 지역에서 찾기 →</a></div>
 </div></section>
 
-<section class="ctasec" style="background-image:linear-gradient(135deg,rgba(224,72,10,.82),rgba(255,140,40,.7)),url('${IMG_MAIN}33.jpg')">
-  <h2>지금 바로 시작하세요</h2><p>상담은 무료입니다. 조건만 남겨주시면 맞는 선생님을 찾아 연락드립니다.</p>
-  <button class="btn" onclick="openForm()">무료 상담 신청하기 →</button>
-</section>`;
+<section class="sec"><div class="wrap">
+  <div class="ctaband" style="background-image:linear-gradient(rgba(20,12,6,.32),rgba(20,12,6,.5)),url('${IMG_MAIN}33.jpg')">
+    <h2>지금 바로 시작하세요</h2><p>상담은 무료입니다. 조건만 남겨주시면 맞는 선생님을 찾아 연락드립니다.</p>
+    <button class="btn" onclick="openForm()">무료 상담 신청하기 →</button>
+  </div>
+</div></section>`;
   return layout({title:`${SITE} · 전국 방문·화상 1:1 과외 매칭`,desc:`전국 ${regions.length.toLocaleString()}개 동네 어디서나 국·영·수·사·과 1:1 과외. 검증된 선생님을 방문·화상으로 연결합니다. 무료 상담 신청.`,canonical:ORIGIN+"/",body,ld,image:heroImg});
 }
 
