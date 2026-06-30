@@ -558,10 +558,11 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .grid{display:grid;gap:16px;margin-top:30px}
 .subj-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
 .feat-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow);transition:transform .15s;display:block}
+.card{position:relative;background:#ddd center/cover no-repeat;border:0;border-radius:18px;padding:18px;box-shadow:0 14px 32px -16px rgba(60,30,10,.45);transition:transform .15s;display:flex;flex-direction:column;justify-content:flex-end;min-height:170px;overflow:hidden;color:#fff}
+.card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,12,6,.1),rgba(20,12,6,.72))}
+.card>*{position:relative;z-index:1}
 .card:hover{transform:translateY(-4px)}
-.card .ic{width:54px;height:54px;border-radius:14px;background:var(--soft) center/cover no-repeat;margin-bottom:12px}
-.card h3{font-size:18px;font-weight:800}.card p{font-size:13.5px;color:var(--muted);margin-top:5px}
+.card h3{font-size:17px;font-weight:800;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.65)}.card p{font-size:13px;color:rgba(255,255,255,.92);margin-top:4px;text-shadow:0 2px 8px rgba(0,0,0,.65)}
 .thumb{position:relative;border-radius:22px;overflow:hidden;max-width:740px;margin:0 auto;background:linear-gradient(135deg,#ffd9b8,#ffe9d6);aspect-ratio:1200/560;display:flex;flex-direction:column;justify-content:flex-end;padding:32px;box-shadow:var(--shadow)}
 .thumb .kw{align-self:flex-start;background:#fff;color:var(--brand);font-weight:800;font-size:13px;padding:6px 14px;border-radius:999px;margin-bottom:12px;box-shadow:var(--shadow)}
 .thumb h1{font-size:clamp(22px,4vw,36px);font-weight:900;letter-spacing:-.03em;line-height:1.18;color:#3a2415}
@@ -821,7 +822,7 @@ ${thumb(null, esc(sd.name)+" 과외", esc(sd.name)+"<br>1:1 과외 (국영수사
 <div class="trial"><b>${esc(sd.name)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sd.name)}','')">상담 신청하기 →</button></div></article>
 <div class="bodycol">
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sd.name)} 과목별 과외</h2>
-<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${sd.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${sd.name} ${s.name}</h3><p>${sd.name} ${s.name} 과외</p></a>`).join("")}</div>
+<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" style="background-image:url('${IMG_MAIN}${s.img}')" href="/${sd.slug}/${s.slug}"><h3>${sd.name} ${s.name}</h3><p>${sd.name} ${s.name} 과외</p></a>`).join("")}</div>
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sd.name)} 시·군·구</h2>
 <div class="chips">${sidoChildren(sd).map(c=>`<a href="/${c.slug}">${esc(c.label)}</a>`).join("")}</div>
 </div></div></section>`;
@@ -870,8 +871,8 @@ function pageSidoSubject(sd, s){
 ${thumb(null, esc(sd.name)+" "+esc(s.name), esc(sd.name)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
 <article class="article">${art}
 <div class="trial"><b>${esc(sd.name)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sd.name)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
-<h2 style="margin-top:32px;font-size:18px">${esc(sd.name)} 시·군·구 ${esc(s.name)} 과외</h2>
-<div class="chips">${sidoChildren(sd).map(c=>`<a href="/${c.slug}/${s.slug}">${esc(c.label)}</a>`).join("")}</div></div></section>`;
+<div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sd.name)} 시·군·구 ${esc(s.name)} 과외</h2>
+<div class="chips">${sidoChildren(sd).map(c=>`<a href="/${c.slug}/${s.slug}">${esc(c.label)}</a>`).join("")}</div></div></div></section>`;
   return layout({title:`${sd.name} ${s.name} 과외 · 방문·화상 1:1 | ${SITE}`,desc:`${sd.name} ${s.name} 과외. 방문·화상 1:1로 검증된 ${s.name} 선생님 매칭. ${sd.full} ${s.name} 과외 무료 상담.`,canonical:`${ORIGIN}/${sd.slug}/${s.slug}`,body,ld});
 }
 
@@ -894,7 +895,7 @@ ${thumb(null, esc(g.sigungu)+" 과외", esc(g.sigungu)+"<br>1:1 과외 (국영�
 <div class="trial"><b>${esc(g.sigungu)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(g.sigungu)}','')">상담 신청하기 →</button></div></article>
 <div class="bodycol">
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(g.sigungu)} 과목별 과외</h2>
-<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${g.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(g.sigungu)} ${s.name}</h3><p>${esc(g.sigungu)} ${s.name} 과외</p></a>`).join("")}</div>
+<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" style="background-image:url('${IMG_MAIN}${s.img}')" href="/${g.slug}/${s.slug}"><h3>${esc(g.sigungu)} ${s.name}</h3><p>${esc(g.sigungu)} ${s.name} 과외</p></a>`).join("")}</div>
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(g.sigungu)} 동네별 과외</h2>
 <div class="chips">${dongs.map(d=>`<a href="/${d.slug}">${esc(d.dong)}</a>`).join("")}</div></div></div></section>`;
   return layout({title:`${g.sigungu} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${g.sigungu} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.name} ${g.sigungu} 동네별 검증된 선생님 연결. 무료 상담.`,canonical:`${ORIGIN}/${g.slug}`,body,ld});
@@ -916,7 +917,7 @@ ${thumb(null, esc(c.city)+" 과외", esc(c.city)+"<br>1:1 과외 (국영수사�
 <div class="trial"><b>${esc(c.city)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(c.city)}','')">상담 신청하기 →</button></div></article>
 <div class="bodycol">
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(c.city)} 과목별 과외</h2>
-<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${c.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(c.city)} ${s.name}</h3><p>${esc(c.city)} ${s.name} 과외</p></a>`).join("")}</div>
+<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" style="background-image:url('${IMG_MAIN}${s.img}')" href="/${c.slug}/${s.slug}"><h3>${esc(c.city)} ${s.name}</h3><p>${esc(c.city)} ${s.name} 과외</p></a>`).join("")}</div>
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(c.city)} 구별 과외</h2>
 <div class="chips">${gus.map(g=>`<a href="/${g.slug}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a>`).join("")}</div></div></div></section>`;
   return layout({title:`${c.city} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${c.city} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.name} ${c.city} 구별 검증된 선생님 연결. 무료 상담.`,canonical:`${ORIGIN}/${c.slug}`,body,ld});
@@ -958,8 +959,8 @@ function pageCitySubject(c, s){
 ${thumb(null, esc(c.city)+" "+esc(s.name), esc(c.city)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
 <article class="article">${art}
 <div class="trial"><b>${esc(c.city)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(c.city)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
-<h2 style="margin-top:32px;font-size:18px">${esc(c.city)} 구별 ${esc(s.name)} 과외</h2>
-<div class="chips">${gus.map(g=>`<a href="/${g.slug}/${s.slug}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a>`).join("")}</div></div></section>`;
+<div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(c.city)} 구별 ${esc(s.name)} 과외</h2>
+<div class="chips">${gus.map(g=>`<a href="/${g.slug}/${s.slug}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a>`).join("")}</div></div></div></section>`;
   return layout({title:`${c.city} ${s.name} 과외 · 방문·화상 1:1 | ${SITE}`,desc:`${c.city} ${s.name} 과외. 방문·화상 1:1로 검증된 ${s.name} 선생님 매칭. ${sd.name} ${c.city} ${s.name} 과외 무료 상담.`,canonical:`${ORIGIN}/${c.slug}/${s.slug}`,body,ld});
 }
 
@@ -1006,8 +1007,8 @@ function pageGuSubject(g, s){
 ${thumb(null, esc(g.sigungu)+" "+esc(s.name), esc(g.sigungu)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
 <article class="article">${art}
 <div class="trial"><b>${esc(g.sigungu)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(g.sigungu)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
-<h2 style="margin-top:32px;font-size:18px">${esc(g.sigungu)} 동네별 ${esc(s.name)} 과외</h2>
-<div class="chips">${dongs.map(d=>`<a href="/${d.slug}/${s.slug}">${esc(d.dong)}</a>`).join("")}</div></div></section>`;
+<div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(g.sigungu)} 동네별 ${esc(s.name)} 과외</h2>
+<div class="chips">${dongs.map(d=>`<a href="/${d.slug}/${s.slug}">${esc(d.dong)}</a>`).join("")}</div></div></div></section>`;
   return layout({title:`${g.sigungu} ${s.name} 과외 · 방문·화상 1:1 | ${SITE}`,desc:`${g.sigungu} ${s.name} 과외. 방문·화상 1:1로 검증된 ${s.name} 선생님 매칭. ${sd.name} ${g.sigungu} ${s.name} 동네별 과외 무료 상담.`,canonical:`${ORIGIN}/${g.slug}/${s.slug}`,body,ld});
 }
 
@@ -1033,7 +1034,7 @@ ${thumb(null, esc(sn)+" 과외", esc(sn)+"<br>1:1 과외 (국영수사과)")}
 <div class="trial"><b>${esc(sn)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sn)}','')">상담 신청하기 →</button></div></article>
 <div class="bodycol">
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sn)} 과목별 과외</h2>
-<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${r.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${s.name}</h3><p>${esc(sn)} ${s.name} 과외</p></a>`).join("")}</div>
+<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" style="background-image:url('${IMG_MAIN}${s.img}')" href="/${r.slug}/${s.slug}"><h3>${s.name}</h3><p>${esc(sn)} ${s.name} 과외</p></a>`).join("")}</div>
 <h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(r.sigungu)} 다른 동네</h2>${nearbyDongs(r,"")}</div></div></section>`;
   return layout({title:`${sn} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${sn} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sn} 검증된 선생님을 연결합니다. 무료 상담.`,canonical:`${ORIGIN}/${r.slug}`,body,ld});
 }
@@ -1053,8 +1054,8 @@ function pageRegionSubject(r, s){
 ${thumb(null, esc(sn)+" "+esc(s.name), esc(sn)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
 <article class="article">${art}
 <div class="trial"><b>${esc(sn)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sn)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
-<h2 style="margin-top:32px;font-size:18px">${esc(r.sigungu)} 다른 동네 ${esc(s.name)} 과외</h2>${nearbyDongs(r,s.slug)}
-<div style="margin-top:18px"><a class="btn btn-o" href="/${r.slug}">← ${esc(sn)} 다른 과목</a></div></div></section>`;
+<div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(r.sigungu)} 다른 동네 ${esc(s.name)} 과외</h2>${nearbyDongs(r,s.slug)}
+<div style="margin-top:18px"><a class="btn btn-o" href="/${r.slug}">← ${esc(sn)} 다른 과목</a></div></div></div></section>`;
   return layout({title:`${sn} ${s.name} 과외 · 방문·화상 1:1 | ${SITE}`,desc:`${sn} ${s.name} 과외를 찾으세요. 방문·화상 1:1로 검증된 ${s.name} 선생님 매칭. ${sn} 초·중·고 ${s.name} 과외 무료 상담.`,canonical:`${ORIGIN}/${r.slug}/${s.slug}`,body,ld});
 }
 
@@ -1100,7 +1101,7 @@ function sitemapPart(i){
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sl.map(u=>`<url><loc>${u}</loc></url>`).join("\n")}\n</urlset>`;
 }
 function robots(){return `User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n`;}
-const SVG_FAVICON='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b35"/><stop offset="1" stop-color="#ff9f1c"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#g)"/><path d="M32 17 v30 M17 32 h30" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg>';
+const SVG_FAVICON='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0480a"/><stop offset="1" stop-color="#ff8a2e"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="#fff"/><text x="32" y="46" font-family="Montserrat,Arial,sans-serif" font-size="34" font-weight="900" font-style="italic" letter-spacing="-2" text-anchor="middle" fill="url(#g)">1:1</text></svg>';
 
 async function handleInquiry(request, env){
   try{ const data=await request.json();
