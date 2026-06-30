@@ -1102,7 +1102,7 @@ function sitemapPart(i){
   if(!sl.length) return null;
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sl.map(u=>`<url><loc>${u}</loc></url>`).join("\n")}\n</urlset>`;
 }
-function robots(){return `User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n`;}
+function robots(){return `User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n#DaumWebMasterTool:e31ac100a8e02f1222092e1356c4397aa929d74df17bb1a018697711f9a49325:2Wt1IlppU2Sk9kz+Yoxcqw==\n`;}
 function rssFeed(){
   const base=[];
   for(const sd of SIDO_LIST) base.push({u:`/${sd.slug}`,t:`${sd.name} 1:1 과외`});
