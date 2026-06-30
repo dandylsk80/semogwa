@@ -654,6 +654,7 @@ function layout({title,desc,canonical,body,ld,image}){
   return `<!DOCTYPE html><html lang="ko"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="naver-site-verification" content="f11d70c2a8f7f36a7cb904c23488ff8a8201fcc9" />
+<meta name="msvalidate.01" content="41990cbcc27241c6b899d18d983370a3" />
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${esc(canonical)}">
 <link rel="alternate" type="application/rss+xml" title="${SITE}" href="${ORIGIN}/rss.xml">
@@ -1132,6 +1133,7 @@ export default {
     if(path==="/favicon.svg") return new Response(SVG_FAVICON,{headers:{"content-type":"image/svg+xml","cache-control":"public, max-age=604800"}});
     if(path==="/robots.txt") return new Response(robots(),{headers:{"content-type":"text/plain;charset=UTF-8"}});
     if(path==="/rss.xml") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
+    if(path==="/41990cbcc27241c6b899d18d983370a3.txt") return new Response("41990cbcc27241c6b899d18d983370a3",{headers:{"content-type":"text/plain;charset=UTF-8"}});
     if(path==="/sitemap.xml") return new Response(sitemapIndex(),{headers:{"content-type":"application/xml;charset=UTF-8"}});
     const sm=path.match(/^\/sitemap-(\d+)\.xml$/);
     if(sm){const p=sitemapPart(parseInt(sm[1],10)); if(p) return new Response(p,{headers:{"content-type":"application/xml;charset=UTF-8"}}); return html(page404(),404);}
