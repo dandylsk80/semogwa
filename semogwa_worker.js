@@ -51,6 +51,33 @@ for (const r of regions){
   DONGS_OF_GU[gs].push(r);
 }
 
+// ── 시(구를 가진 시) 레벨 파생 ──
+const CITY_MAP = {};       // citySlug -> {slug, sido(obj), city(시이름), gus:[guSlug...]}
+const CITY_OF_SIDO = {};   // sidoSlug -> [citySlug...]
+const GU_TO_CITY = {};     // guSlug -> citySlug
+function lcp(arr){ if(!arr.length) return ""; let p=arr[0]; for(const s of arr){ let i=0; while(i<p.length&&i<s.length&&p[i]===s[i])i++; p=p.slice(0,i);} return p; }
+{
+  const byCity={}; // (sido.slug|시이름) -> {sido, city, gus:[]}
+  for(const gs in GU_MAP){
+    const g=GU_MAP[gs];
+    if(!/시 .*구$/.test(g.sigungu)) continue;   // "○○시 ○구" 형태만
+    const city=g.sigungu.split(" ")[0];
+    const key=g.sido.slug+"|"+city;
+    (byCity[key] ||= {sido:g.sido, city, gus:[]}).gus.push(gs);
+  }
+  for(const key in byCity){
+    const c=byCity[key];
+    if(c.gus.length<1) continue;
+    let cs=lcp(c.gus);
+    const cut=cs.lastIndexOf("si");           // 'si'로 끝나도록 보정
+    if(cut>0) cs=cs.slice(0,cut+2);
+    if(!cs||CITY_MAP[cs]||SIDO_MAP[cs]) continue;
+    CITY_MAP[cs]={slug:cs, sido:c.sido, city:c.city, gus:c.gus};
+    (CITY_OF_SIDO[c.sido.slug] ||= []).push(cs);
+    for(const gs of c.gus) GU_TO_CITY[gs]=cs;
+  }
+}
+
 function esc(s){ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
 
 /* ===================== 본문 생성 엔진 (4,000자급) ===================== */
@@ -81,7 +108,12 @@ function dateMeta(d){
 // 시각 블록
 function vSummary(q,a){ return `<div class="summary"><h3>💡 ${q}</h3><p>${a}</p></div>`; }
 function vSteps(arr){
-  return `<div class="steps">${arr.map((s,i)=>`<div class="st"><div class="no">${i+1}</div><b>${s.t}</b><span>${s.d}</span></div>`).join("")}</div>`;
+  const st=[
+    {n:1,t:"무료 상담 신청",d:"학년·과목·지역·목표를 남겨주세요.",img:"11.jpg"},
+    {n:2,t:"맞춤 선생님 매칭",d:"조건에 맞는 검증된 선생님을 연결합니다.",img:"12.jpg"},
+    {n:3,t:"수업 시작",d:"방문 또는 화상으로 1:1 수업을 시작해요.",img:"13.jpg"}
+  ];
+  return `<div class="howrow" style="margin-top:18px">${st.map(s=>`<div class="hc" style="background-image:url('${IMG_MAIN}${s.img}')"><div class="num">${s.n}</div><b>${s.t}</b><p>${s.d}</p></div>`).join("")}</div>`;
 }
 function vCheck(title, items){
   return `<div class="checklist"><h4>✅ ${title}</h4>${items.map(t=>`<div class="ci"><span class="ck">✓</span><span>${t}</span></div>`).join("")}</div>`;
@@ -91,7 +123,8 @@ function vCompare(head, rows){
 }
 function vCallout(txt){ return `<div class="callout"><span class="ico">📌</span><span>${txt}</span></div>`; }
 function vICards(arr){
-  return `<div class="icards">${arr.map(c=>`<div class="ic2"><div class="e">${c.e}</div><b>${c.b}</b><span>${c.s}</span></div>`).join("")}</div>`;
+  const imgs=["21.jpg","22.jpg","23.jpg","24.jpg","25.jpg","26.jpg"];
+  return `<div class="icards">${arr.map((c,i)=>`<div class="ic2" style="background-image:url('${IMG_MAIN}${imgs[i%imgs.length]}')"><b>${c.b}</b><span>${c.s}</span></div>`).join("")}</div>`;
 }
 // 썸네일 이미지 (image/ 폴더의 pexels 사진 — 영문 경로, CDN 로딩 확실). 페이지마다 해시로 다른 사진
 const IMG_BASE = "https://cdn.jsdelivr.net/gh/dandylsk80/semogwa@main/image/";
@@ -527,9 +560,9 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .feat-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow);transition:transform .15s;display:block}
 .card:hover{transform:translateY(-4px)}
-.card .ic{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:25px;background:var(--soft);margin-bottom:12px}
+.card .ic{width:54px;height:54px;border-radius:14px;background:var(--soft) center/cover no-repeat;margin-bottom:12px}
 .card h3{font-size:18px;font-weight:800}.card p{font-size:13.5px;color:var(--muted);margin-top:5px}
-.thumb{position:relative;border-radius:22px;overflow:hidden;max-width:740px;margin:0 auto;background:linear-gradient(135deg,#ffd9b8,#ffe9d6);aspect-ratio:1200/440;display:flex;flex-direction:column;justify-content:flex-end;padding:32px;box-shadow:var(--shadow)}
+.thumb{position:relative;border-radius:22px;overflow:hidden;max-width:740px;margin:0 auto;background:linear-gradient(135deg,#ffd9b8,#ffe9d6);aspect-ratio:1200/560;display:flex;flex-direction:column;justify-content:flex-end;padding:32px;box-shadow:var(--shadow)}
 .thumb .kw{align-self:flex-start;background:#fff;color:var(--brand);font-weight:800;font-size:13px;padding:6px 14px;border-radius:999px;margin-bottom:12px;box-shadow:var(--shadow)}
 .thumb h1{font-size:clamp(22px,4vw,36px);font-weight:900;letter-spacing:-.03em;line-height:1.18;color:#3a2415}
 .article{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:30px 34px;box-shadow:var(--shadow);margin:22px auto 0;max-width:740px}
@@ -542,8 +575,8 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .faq-item summary::before{content:"＋";color:var(--brand);font-weight:900;margin-right:10px}
 .faq-item[open] summary::before{content:"－"}
 .faq-a{color:#5a4d42;padding:0 0 16px;font-size:15px}
-.trial{margin-top:24px;padding:26px;border-radius:18px;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;text-align:center}
-.trial b{font-size:19px;font-weight:900;display:block}.trial span{display:block;opacity:.92;margin-top:6px;font-size:15px}
+.trial{position:relative;margin-top:24px;padding:30px 26px;border-radius:18px;background:linear-gradient(rgba(20,12,6,.34),rgba(20,12,6,.55)),url('https://cdn.jsdelivr.net/gh/dandylsk80/semogwa@main/image/main/33.jpg') center/cover no-repeat;color:#fff;text-align:center;overflow:hidden;box-shadow:0 18px 40px -18px rgba(60,30,10,.5)}
+.trial b{font-size:19px;font-weight:900;display:block;text-shadow:0 2px 10px rgba(0,0,0,.5)}.trial span{display:block;opacity:.95;margin-top:6px;font-size:15px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
 .trial .btn{margin-top:16px;background:#fff;color:var(--brand)}
 .bc{font-size:13px;color:var(--muted);padding:18px 0 0}.bc a:hover{color:var(--brand)}
 /* 날짜 메타 */
@@ -571,8 +604,9 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .callout{margin:14px 0;padding:16px 18px;border-radius:14px;background:#eafaf5;border:1px solid #bfe9dc;font-size:14.5px;color:#1f6b54;display:flex;gap:10px}
 .callout .ico{font-size:20px;flex:none}
 .icards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:14px 0}
-.icards .ic2{background:#fffdfb;border:1px solid var(--line);border-radius:14px;padding:16px}
-.icards .ic2 .e{font-size:24px}.icards .ic2 b{display:block;margin-top:6px;font-size:14.5px}.icards .ic2 span{font-size:13px;color:var(--muted)}
+.icards .ic2{position:relative;background:#ddd center/cover no-repeat;border:0;border-radius:16px;padding:20px 18px;min-height:150px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;box-shadow:0 14px 30px -16px rgba(60,30,10,.4)}
+.icards .ic2::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,12,6,.12),rgba(20,12,6,.62))}
+.icards .ic2 b{position:relative;z-index:1;display:block;font-size:15.5px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6)}.icards .ic2 span{position:relative;z-index:1;font-size:13px;color:rgba(255,255,255,.95);text-shadow:0 2px 8px rgba(0,0,0,.6);margin-top:4px}
 /* 이미지 썸네일 */
 .thumb.has-img{background-size:cover;background-position:center}
 .thumb.has-img::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(44,32,24,.15),rgba(44,32,24,.62))}
@@ -757,6 +791,14 @@ function areaLd(name, url, crumbs){
   ];
 }
 
+// 시도 하위 표시용: 구 가진 시는 시로 묶고, 나머지는 시군구 그대로
+function sidoChildren(sd){
+  const out=[]; const seen=new Set();
+  for(const cs of (CITY_OF_SIDO[sd.slug]||[])){ const c=CITY_MAP[cs]; out.push({slug:c.slug,label:c.city}); seen.add(cs); for(const gs of c.gus) seen.add(gs); }
+  for(const gs of (GU_OF_SIDO[sd.slug]||[])){ if(seen.has(gs)) continue; out.push({slug:gs,label:GU_MAP[gs].sigungu}); }
+  return out;
+}
+
 // 시도 페이지
 function pageSido(sd){
   const gus = (GU_OF_SIDO[sd.slug]||[]).map(gs=>GU_MAP[gs]);
@@ -767,11 +809,11 @@ function pageSido(sd){
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/regions">전국</a> › ${esc(sd.name)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
 ${thumb(null, esc(sd.name)+" 과외", esc(sd.name)+"<br>1:1 과외 (국영수사과)")}
-<div class="grid subj-grid" style="margin-top:24px">${SUBJECTS.map(s=>`<a class="card" href="/${sd.slug}/${s.slug}"><div class="ic">${s.emoji}</div><h3>${sd.name} ${s.name}</h3><p>${sd.name} ${s.name} 과외</p></a>`).join("")}</div>
+<div class="grid subj-grid" style="margin-top:24px">${SUBJECTS.map(s=>`<a class="card" href="/${sd.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${sd.name} ${s.name}</h3><p>${sd.name} ${s.name} 과외</p></a>`).join("")}</div>
 <article class="article">${art}
 <div class="trial"><b>${esc(sd.name)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sd.name)}','')">상담 신청하기 →</button></div></article>
 <h2 style="margin-top:32px;font-size:18px">${esc(sd.name)} 시·군·구</h2>
-<div class="chips">${gus.map(g=>`<a href="/${g.slug}">${esc(g.sigungu)}</a>`).join("")}</div>
+<div class="chips">${sidoChildren(sd).map(c=>`<a href="/${c.slug}">${esc(c.label)}</a>`).join("")}</div>
 </div></section>`;
   return layout({title:`${sd.name} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${sd.name} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.full} 시·군·구별 검증된 선생님을 연결합니다. 무료 상담.`,canonical:`${ORIGIN}/${sd.slug}`,body,ld});
 }
@@ -819,28 +861,92 @@ ${thumb(null, esc(sd.name)+" "+esc(s.name), esc(sd.name)+"<br>"+esc(s.name)+" 1:
 <article class="article">${art}
 <div class="trial"><b>${esc(sd.name)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sd.name)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
 <h2 style="margin-top:32px;font-size:18px">${esc(sd.name)} 시·군·구 ${esc(s.name)} 과외</h2>
-<div class="chips">${gus.map(g=>`<a href="/${g.slug}/${s.slug}">${esc(g.sigungu)}</a>`).join("")}</div></div></section>`;
+<div class="chips">${sidoChildren(sd).map(c=>`<a href="/${c.slug}/${s.slug}">${esc(c.label)}</a>`).join("")}</div></div></section>`;
   return layout({title:`${sd.name} ${s.name} 과외 · 방문·화상 1:1 | ${SITE}`,desc:`${sd.name} ${s.name} 과외. 방문·화상 1:1로 검증된 ${s.name} 선생님 매칭. ${sd.full} ${s.name} 과외 무료 상담.`,canonical:`${ORIGIN}/${sd.slug}/${s.slug}`,body,ld});
 }
 
 // 시군구 페이지
 function pageGu(g){
   const sd = g.sido;
+  const cs = GU_TO_CITY[g.slug];
+  const cityBc = cs ? ` › <a href="/${cs}">${esc(CITY_MAP[cs].city)}</a>` : "";
+  const guLabel = cs ? (g.sigungu.split(" ").slice(1).join(" ")||g.sigungu) : g.sigungu;
   const dongs = DONGS_OF_GU[g.slug]||[];
   const { html:art, faqs } = buildArea("시군구", g.sigungu, "동", dongs);
   const ld = areaLd(`${sd.name} ${g.sigungu}`, `${ORIGIN}/${g.slug}`,
     [{name:"홈",item:ORIGIN+"/"},{name:sd.name,item:`${ORIGIN}/${sd.slug}`},{name:g.sigungu,item:`${ORIGIN}/${g.slug}`}]);
   ld.push({"@context":"https://schema.org","@type":"FAQPage","mainEntity":faqs.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))});
   const body=`
-<div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › ${esc(g.sigungu)}</div></div>
+<div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a>${cityBc} › ${esc(guLabel)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
 ${thumb(null, esc(g.sigungu)+" 과외", esc(g.sigungu)+"<br>1:1 과외 (국영수사과)")}
-<div class="grid subj-grid" style="margin-top:24px">${SUBJECTS.map(s=>`<a class="card" href="/${g.slug}/${s.slug}"><div class="ic">${s.emoji}</div><h3>${esc(g.sigungu)} ${s.name}</h3><p>${esc(g.sigungu)} ${s.name} 과외</p></a>`).join("")}</div>
+<div class="grid subj-grid" style="margin-top:24px">${SUBJECTS.map(s=>`<a class="card" href="/${g.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(g.sigungu)} ${s.name}</h3><p>${esc(g.sigungu)} ${s.name} 과외</p></a>`).join("")}</div>
 <article class="article">${art}
 <div class="trial"><b>${esc(g.sigungu)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(g.sigungu)}','')">상담 신청하기 →</button></div></article>
 <h2 style="margin-top:32px;font-size:18px">${esc(g.sigungu)} 동네별 과외</h2>
 <div class="chips">${dongs.map(d=>`<a href="/${d.slug}">${esc(d.dong)}</a>`).join("")}</div></div></section>`;
   return layout({title:`${g.sigungu} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${g.sigungu} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.name} ${g.sigungu} 동네별 검증된 선생님 연결. 무료 상담.`,canonical:`${ORIGIN}/${g.slug}`,body,ld});
+}
+
+// 시(구를 가진 시) 페이지
+function pageCity(c){
+  const sd = c.sido;
+  const gus = c.gus.map(gs=>GU_MAP[gs]);
+  const { html:art, faqs } = buildArea("시", c.city, "구", gus);
+  const ld = areaLd(`${sd.name} ${c.city}`, `${ORIGIN}/${c.slug}`,
+    [{name:"홈",item:ORIGIN+"/"},{name:sd.name,item:`${ORIGIN}/${sd.slug}`},{name:c.city,item:`${ORIGIN}/${c.slug}`}]);
+  ld.push({"@context":"https://schema.org","@type":"FAQPage","mainEntity":faqs.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))});
+  const body=`
+<div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › ${esc(c.city)}</div></div>
+<section class="sec" style="padding-top:16px"><div class="wrap">
+${thumb(null, esc(c.city)+" 과외", esc(c.city)+"<br>1:1 과외 (국영수사과)")}
+<div class="grid subj-grid" style="margin-top:24px">${SUBJECTS.map(s=>`<a class="card" href="/${c.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(c.city)} ${s.name}</h3><p>${esc(c.city)} ${s.name} 과외</p></a>`).join("")}</div>
+<article class="article">${art}
+<div class="trial"><b>${esc(c.city)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(c.city)}','')">상담 신청하기 →</button></div></article>
+<h2 style="margin-top:32px;font-size:18px">${esc(c.city)} 구별 과외</h2>
+<div class="chips">${gus.map(g=>`<a href="/${g.slug}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a>`).join("")}</div></div></section>`;
+  return layout({title:`${c.city} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${c.city} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.name} ${c.city} 구별 검증된 선생님 연결. 무료 상담.`,canonical:`${ORIGIN}/${c.slug}`,body,ld});
+}
+
+// 시 × 과목
+function pageCitySubject(c, s){
+  const sd = c.sido;
+  const gus = c.gus.map(gs=>GU_MAP[gs]);
+  const r = rng(hash(c.slug+"|"+s.slug));
+  const C = commonPools(c.city, s.name);
+  let art = dateMeta(pageDates(c.slug+"|"+s.slug));
+  art += vSummary(`${c.city} ${s.name} 과외, 어떻게 시작하나요?`, `${c.city}에서 방문·화상 1:1 ${s.name} 과외를 무료 상담으로 시작할 수 있습니다. 검증된 ${s.name} 선생님을 학생 수준에 맞춰 매칭합니다.`);
+  art += H(`📘 ${c.city} ${s.name} 과외, 세상의모든과외에서`)+P(pick(C.intro,r));
+  art += H(`🎯 왜 ${c.city}에서 1:1 ${s.name} 과외일까요`)+P(pick(C.why1,r))+P(pick(C.why2,r));
+  art += H(`학원과 1:1 ${s.name} 과외 비교`)+P(pick2(C.compare,r).join(""));
+  art += H(`${c.city} ${s.name} 과외 비용`)+P(pick2(C.cost,r).join(""));
+  art += H(`${c.city} 학년별 ${s.name} 학습`)+P(pick(C.grade,r));
+  const dpa = pick3(subjectDeep(s.slug, c.city), r);
+  art += H(`${c.city} ${s.name}, 이렇게 공부합니다`)+P(dpa[0])+P(dpa[1])+P(dpa[2]);
+  art += H(`방문 · 화상 ${s.name} 과외 모두`)+P(pick2(C.method,r).join(""))+P(pick(C.online,r));
+  art += H(`🧠 ${c.city} 학습 습관까지`)+P(pick(C.habit,r));
+  art += H(`🏡 ${c.city} 학습 환경`)+P(pick(C.env,r));
+  art += H(`${c.city} 학부모님께`)+P(pick2(C.parent,r).join(""));
+  art += H(`${c.city} ${s.name} 시험 대비`)+P(pick2(C.examPrep,r).join(""));
+  art += H(`${c.city} 맞춤이라는 것`)+P(pick(C.region,r));
+  art += H(`🚀 ${c.city} ${s.name} 수업은 이렇게`)+P(pick2(C.process,r).join(""));
+  art += vSteps([{t:"무료 상담",d:"학년·과목·목표"},{t:"선생님 매칭",d:`${c.city} 맞춤 연결`},{t:"첫 수업·진단",d:"시작점 결정"},{t:"정규 수업",d:"방문·화상 1:1"}]);
+  art += H(`${c.city} ${s.name} 과외 신청`)+P(pick(C.how,r))+P(pick(C.closing,r));
+  art += P(`세상의모든과외는 ${c.city}을 비롯한 전국에서 학생과 ${s.name} 선생님을 잇는 일을 합니다. 학원과 달리 정해진 틀에 학생을 맞추는 것이 아니라, 학생에게 수업을 맞춥니다. ${c.city}에서 ${s.name} 과외를 알아보고 계신다면 지금 무료 상담을 남겨 주세요.`);
+  const faqs = faqsFor(c.city, s.name);
+  art += faqBlock(faqs);
+  const ld = areaLd(`${sd.name} ${c.city}`, `${ORIGIN}/${c.slug}/${s.slug}`,
+    [{name:"홈",item:ORIGIN+"/"},{name:sd.name,item:`${ORIGIN}/${sd.slug}`},{name:c.city,item:`${ORIGIN}/${c.slug}`},{name:`${s.name} 과외`,item:`${ORIGIN}/${c.slug}/${s.slug}`}]);
+  ld.push({"@context":"https://schema.org","@type":"FAQPage","mainEntity":faqs.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))});
+  const body=`
+<div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › <a href="/${c.slug}">${esc(c.city)}</a> › ${esc(s.name)}</div></div>
+<section class="sec" style="padding-top:16px"><div class="wrap">
+${thumb(null, esc(c.city)+" "+esc(s.name), esc(c.city)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
+<article class="article">${art}
+<div class="trial"><b>${esc(c.city)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(c.city)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
+<h2 style="margin-top:32px;font-size:18px">${esc(c.city)} 구별 ${esc(s.name)} 과외</h2>
+<div class="chips">${gus.map(g=>`<a href="/${g.slug}/${s.slug}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a>`).join("")}</div></div></section>`;
+  return layout({title:`${c.city} ${s.name} 과외 · 방문·화상 1:1 | ${SITE}`,desc:`${c.city} ${s.name} 과외. 방문·화상 1:1로 검증된 ${s.name} 선생님 매칭. ${sd.name} ${c.city} ${s.name} 과외 무료 상담.`,canonical:`${ORIGIN}/${c.slug}/${s.slug}`,body,ld});
 }
 
 // 시군구 × 과목
@@ -909,10 +1015,11 @@ function pageRegion(r){
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › <a href="/${gs}">${esc(r.sigungu)}</a> › ${esc(r.dong)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
 ${thumb(null, esc(sn)+" 과외", esc(sn)+"<br>1:1 과외 (국영수사과)")}
-<div class="grid subj-grid" style="margin-top:24px">${SUBJECTS.map(s=>`<a class="card" href="/${r.slug}/${s.slug}"><div class="ic">${s.emoji}</div><h3>${s.name}</h3><p>${esc(sn)} ${s.name} 과외</p></a>`).join("")}</div>
 <article class="article">${art}
 <div class="trial"><b>${esc(sn)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sn)}','')">상담 신청하기 →</button></div></article>
-<h2 style="margin-top:32px;font-size:18px">${esc(r.sigungu)} 다른 동네</h2>${nearbyDongs(r,"")}</div></section>`;
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sn)} 과목별 과외</h2>
+<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${r.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${s.name}</h3><p>${esc(sn)} ${s.name} 과외</p></a>`).join("")}</div>
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(r.sigungu)} 다른 동네</h2>${nearbyDongs(r,"")}</div></section>`;
   return layout({title:`${sn} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${sn} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sn} 검증된 선생님을 연결합니다. 무료 상담.`,canonical:`${ORIGIN}/${r.slug}`,body,ld});
 }
 
@@ -939,12 +1046,20 @@ ${thumb(null, esc(sn)+" "+esc(s.name), esc(sn)+"<br>"+esc(s.name)+" 1:1 과외",
 function pageRegions(){
   let dir="";
   for (const sd of SIDO_LIST){
-    const gus=(GU_OF_SIDO[sd.slug]||[]).map(gs=>GU_MAP[gs]);
-    if(!gus.length) continue;
+    const children=sidoChildren(sd);
+    if(!children.length) continue;
     let inner="";
-    for (const g of gus){
-      const dongs=DONGS_OF_GU[g.slug]||[];
-      inner+=`<details class="lv2"><summary><a href="/${g.slug}">${esc(g.sigungu)}</a> (${dongs.length})</summary><div class="dongs">${dongs.map(d=>`<a href="/${d.slug}">${esc(d.dong)}</a>`).join("")}</div></details>`;
+    for (const ch of children){
+      const dongHtml=ds=>ds.map(d=>`<a href="/${d.slug}">${esc(d.dong)}</a>`).join("");
+      if(CITY_MAP[ch.slug]){
+        const c=CITY_MAP[ch.slug]; let gx="";
+        for(const gs of c.gus){ const g=GU_MAP[gs]; const dongs=DONGS_OF_GU[gs]||[];
+          gx+=`<details class="lv2"><summary><a href="/${gs}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a> (${dongs.length})</summary><div class="dongs">${dongHtml(dongs)}</div></details>`; }
+        inner+=`<details class="lv2"><summary><a href="/${c.slug}">${esc(c.city)}</a></summary>${gx}</details>`;
+      } else {
+        const g=GU_MAP[ch.slug]; const dongs=DONGS_OF_GU[ch.slug]||[];
+        inner+=`<details class="lv2"><summary><a href="/${ch.slug}">${esc(g.sigungu)}</a> (${dongs.length})</summary><div class="dongs">${dongHtml(dongs)}</div></details>`;
+      }
     }
     dir+=`<details class="lv1"><summary><a href="/${sd.slug}" style="color:inherit">${esc(sd.name)}</a></summary>${inner}</details>`;
   }
@@ -964,6 +1079,7 @@ function allUrls(){
   const u=[`${ORIGIN}/`,`${ORIGIN}/regions`];
   for (const s of SUBJECTS) u.push(`${ORIGIN}/${s.slug}`);
   for (const sd of SIDO_LIST){ u.push(`${ORIGIN}/${sd.slug}`); for(const s of SUBJECTS) u.push(`${ORIGIN}/${sd.slug}/${s.slug}`); }
+  for (const cs in CITY_MAP){ u.push(`${ORIGIN}/${cs}`); for(const s of SUBJECTS) u.push(`${ORIGIN}/${cs}/${s.slug}`); }
   for (const gs in GU_MAP){ u.push(`${ORIGIN}/${gs}`); for(const s of SUBJECTS) u.push(`${ORIGIN}/${gs}/${s.slug}`); }
   for (const r of regions){ u.push(`${ORIGIN}/${r.slug}`); for(const s of SUBJECTS) u.push(`${ORIGIN}/${r.slug}/${s.slug}`); }
   return u;
@@ -1008,6 +1124,7 @@ export default {
       if(a==="regions") return html(pageRegions());
       if(SUBJECT_MAP[a]) return html(pageSubject(SUBJECT_MAP[a]));
       if(REGION_MAP[a]) return html(pageRegion(REGION_MAP[a]));
+      if(CITY_MAP[a]) return html(pageCity(CITY_MAP[a]));
       if(GU_MAP[a]) return html(pageGu(GU_MAP[a]));
       if(SIDO_MAP[a]) return html(pageSido(SIDO_MAP[a]));
       return html(page404(),404);
@@ -1016,6 +1133,7 @@ export default {
       const a=segs[0], s=SUBJECT_MAP[segs[1]];
       if(!s) return html(page404(),404);
       if(REGION_MAP[a]) return html(pageRegionSubject(REGION_MAP[a],s));
+      if(CITY_MAP[a]) return html(pageCitySubject(CITY_MAP[a],s));
       if(GU_MAP[a]) return html(pageGuSubject(GU_MAP[a],s));
       if(SIDO_MAP[a]) return html(pageSidoSubject(SIDO_MAP[a],s));
       return html(page404(),404);
