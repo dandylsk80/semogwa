@@ -619,6 +619,7 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .dir details{margin-top:12px}
 .dir .lv1>summary{cursor:pointer;font-size:18px;font-weight:800;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-radius:14px;list-style:none;box-shadow:var(--shadow)}
 .dir summary::-webkit-details-marker{display:none}
+.dir .sido-all{display:inline-block;margin:10px 0 2px 4px;font-weight:800;color:var(--brand);font-size:14px}
 .dir .lv2{margin:10px 0 0 8px}.dir .lv2>summary{cursor:pointer;font-weight:700;color:#6b5d50;padding:8px 0;list-style:none}
 .dir .dongs{display:flex;flex-wrap:wrap;gap:7px;padding:6px 0 8px 12px}
 .dir .dongs a{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-size:13px}
@@ -689,7 +690,7 @@ function formModal(){
   <div class="field"><label>학생 이름 *</label><input id="f_name" placeholder="예: 김OO"></div>
   <div class="field"><label>학년 *</label><input id="f_grade" placeholder="예: 중2"></div>
   <div class="field"><label>연락처 *</label><input id="f_phone" placeholder="예: 010-1234-5678"></div>
-  <div class="field"><label>지역 *</label><input id="f_region" readonly onclick="openAddr()" placeholder="클릭해서 주소 검색" style="cursor:pointer;background:#fffdfb"></div>
+  <div class="field"><label>지역 *</label><input id="f_region" readonly onclick="openAddr()" placeholder="클릭해서 주소 검색" style="cursor:pointer;background:#fffdfb"><input id="f_region_detail" placeholder="상세주소 (동·호수 등)" style="margin-top:8px"></div>
   <div class="field"><label>과목 *</label><select id="f_subject">${SUBJECTS.map(s=>`<option value="${s.name}">${s.name}</option>`).join("")}</select></div>
   <div class="field"><label>남기실 말 (선택)</label><textarea id="f_memo" rows="2" placeholder="목표, 가능 시간 등"></textarea></div>
   <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:16px" id="submitBtn" onclick="submitForm()">상담 신청하기</button>
@@ -702,14 +703,15 @@ document.getElementById('formModal').classList.add('open');if(pre&&pre.subject){
 function closeForm(){document.getElementById('formModal').classList.remove('open')}
 function resetAndClose(){var fb=document.getElementById('formBody');if(_fh!==null)fb.innerHTML=_fh;document.getElementById('formModal').classList.remove('open');}
 function fillForm(region,subject){openForm({region:region,subject:subject})}
-function openAddr(){if(typeof daum==='undefined'||!daum.Postcode){alert('주소 검색을 불러오는 중입니다. 잠시 후 다시 시도해주세요.');return;}new daum.Postcode({oncomplete:function(data){var v=data.roadAddress||data.jibunAddress||data.address;document.getElementById('f_region').value=v;}}).open();}
+function openAddr(){if(typeof daum==='undefined'||!daum.Postcode){alert('주소 검색을 불러오는 중입니다. 잠시 후 다시 시도해주세요.');return;}new daum.Postcode({oncomplete:function(data){var v=data.roadAddress||data.jibunAddress||data.address;document.getElementById('f_region').value=v;var dt=document.getElementById('f_region_detail');if(dt)dt.focus();}}).open();}
 function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
 async function submitForm(){var btn=document.getElementById('submitBtn');
-var d={name:val('f_name'),grade:val('f_grade'),phone:val('f_phone'),region:val('f_region'),subject:val('f_subject'),memo:val('f_memo'),page:location.pathname};
+var addr=val('f_region');var detail=val('f_region_detail');
+var d={name:val('f_name'),grade:val('f_grade'),phone:val('f_phone'),region:(addr+' '+detail).trim(),subject:val('f_subject'),memo:val('f_memo'),page:location.pathname};
 if(!d.name){alert('학생 이름을 입력해주세요.');return;}
 if(!d.grade){alert('학년을 입력해주세요.');return;}
 if(!d.phone){alert('연락처를 입력해주세요.');return;}
-if(!d.region){alert('지역을 선택해주세요.');return;}
+if(!addr){alert('지역(주소)을 검색해주세요.');return;}
 if(!d.subject){alert('과목을 선택해주세요.');return;}
 btn.textContent='신청 중...';btn.disabled=true;
 try{await fetch('/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});
@@ -815,10 +817,11 @@ function pageSido(sd){
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/regions">전국</a> › ${esc(sd.name)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
 ${thumb(null, esc(sd.name)+" 과외", esc(sd.name)+"<br>1:1 과외 (국영수사과)")}
-<div class="grid subj-grid" style="margin-top:24px">${SUBJECTS.map(s=>`<a class="card" href="/${sd.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${sd.name} ${s.name}</h3><p>${sd.name} ${s.name} 과외</p></a>`).join("")}</div>
 <article class="article">${art}
 <div class="trial"><b>${esc(sd.name)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sd.name)}','')">상담 신청하기 →</button></div></article>
-<h2 style="margin-top:32px;font-size:18px">${esc(sd.name)} 시·군·구</h2>
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sd.name)} 과목별 과외</h2>
+<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${sd.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${sd.name} ${s.name}</h3><p>${sd.name} ${s.name} 과외</p></a>`).join("")}</div>
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sd.name)} 시·군·구</h2>
 <div class="chips">${sidoChildren(sd).map(c=>`<a href="/${c.slug}">${esc(c.label)}</a>`).join("")}</div>
 </div></section>`;
   return layout({title:`${sd.name} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${sd.name} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.full} 시·군·구별 검증된 선생님을 연결합니다. 무료 상담.`,canonical:`${ORIGIN}/${sd.slug}`,body,ld});
@@ -886,10 +889,11 @@ function pageGu(g){
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a>${cityBc} › ${esc(guLabel)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
 ${thumb(null, esc(g.sigungu)+" 과외", esc(g.sigungu)+"<br>1:1 과외 (국영수사과)")}
-<div class="grid subj-grid" style="margin-top:24px">${SUBJECTS.map(s=>`<a class="card" href="/${g.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(g.sigungu)} ${s.name}</h3><p>${esc(g.sigungu)} ${s.name} 과외</p></a>`).join("")}</div>
 <article class="article">${art}
 <div class="trial"><b>${esc(g.sigungu)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(g.sigungu)}','')">상담 신청하기 →</button></div></article>
-<h2 style="margin-top:32px;font-size:18px">${esc(g.sigungu)} 동네별 과외</h2>
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(g.sigungu)} 과목별 과외</h2>
+<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${g.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(g.sigungu)} ${s.name}</h3><p>${esc(g.sigungu)} ${s.name} 과외</p></a>`).join("")}</div>
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(g.sigungu)} 동네별 과외</h2>
 <div class="chips">${dongs.map(d=>`<a href="/${d.slug}">${esc(d.dong)}</a>`).join("")}</div></div></section>`;
   return layout({title:`${g.sigungu} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${g.sigungu} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.name} ${g.sigungu} 동네별 검증된 선생님 연결. 무료 상담.`,canonical:`${ORIGIN}/${g.slug}`,body,ld});
 }
@@ -906,10 +910,11 @@ function pageCity(c){
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › ${esc(c.city)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
 ${thumb(null, esc(c.city)+" 과외", esc(c.city)+"<br>1:1 과외 (국영수사과)")}
-<div class="grid subj-grid" style="margin-top:24px">${SUBJECTS.map(s=>`<a class="card" href="/${c.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(c.city)} ${s.name}</h3><p>${esc(c.city)} ${s.name} 과외</p></a>`).join("")}</div>
 <article class="article">${art}
 <div class="trial"><b>${esc(c.city)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(c.city)}','')">상담 신청하기 →</button></div></article>
-<h2 style="margin-top:32px;font-size:18px">${esc(c.city)} 구별 과외</h2>
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(c.city)} 과목별 과외</h2>
+<div class="grid subj-grid" style="margin-top:16px">${SUBJECTS.map(s=>`<a class="card" href="/${c.slug}/${s.slug}"><div class="ic" style="background-image:url('${IMG_MAIN}${s.img}')"></div><h3>${esc(c.city)} ${s.name}</h3><p>${esc(c.city)} ${s.name} 과외</p></a>`).join("")}</div>
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(c.city)} 구별 과외</h2>
 <div class="chips">${gus.map(g=>`<a href="/${g.slug}">${esc(g.sigungu.split(" ").slice(1).join(" ")||g.sigungu)}</a>`).join("")}</div></div></section>`;
   return layout({title:`${c.city} 과외 · 방문·화상 1:1 (국영수사과) | ${SITE}`,desc:`${c.city} 1:1 과외 매칭. 국어·영어·수학·사회·과학을 방문·화상으로. ${sd.name} ${c.city} 구별 검증된 선생님 연결. 무료 상담.`,canonical:`${ORIGIN}/${c.slug}`,body,ld});
 }
@@ -1067,7 +1072,7 @@ function pageRegions(){
         inner+=`<details class="lv2"><summary><a href="/${ch.slug}">${esc(g.sigungu)}</a> (${dongs.length})</summary><div class="dongs">${dongHtml(dongs)}</div></details>`;
       }
     }
-    dir+=`<details class="lv1"><summary><a href="/${sd.slug}" style="color:inherit">${esc(sd.name)}</a></summary>${inner}</details>`;
+    dir+=`<details class="lv1"><summary>${esc(sd.name)}</summary><a class="sido-all" href="/${sd.slug}">${esc(sd.name)} 과외 전체 보기 →</a>${inner}</details>`;
   }
   const body=`<section class="sec"><div class="wrap"><div class="bc" style="padding-bottom:8px"><a href="/">홈</a> › 전국 지역</div>
   <h2 style="text-align:left">전국 과외 지역</h2><p style="color:#6b5d50;margin-top:8px">전국 ${regions.length.toLocaleString()}개 동·읍·면에서 1:1 과외를 매칭합니다. 지역을 선택하세요.</p>
