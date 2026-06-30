@@ -1119,8 +1119,9 @@ function rssFeed(){
 const SVG_FAVICON='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0480a"/><stop offset="1" stop-color="#ff8a2e"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="#fff"/><text x="32" y="46" font-family="Montserrat,Arial,sans-serif" font-size="34" font-weight="900" font-style="italic" letter-spacing="-2" text-anchor="middle" fill="url(#g)">1:1</text></svg>';
 
 async function handleInquiry(request, env){
+  const GAS = (env&&env.GAS_URL) || "https://script.google.com/macros/s/AKfycbxbV11A0oo7-PSLYubGM29psZNfoFf1DGfQ0hdB8jF71G35bIW1NzpHhZN9YIgpUvyY/exec";
   try{ const data=await request.json();
-    if(env&&env.GAS_URL) await fetch(env.GAS_URL,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(data)});
+    await fetch(GAS,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(data),redirect:"follow"});
     return new Response(JSON.stringify({ok:true}),{headers:{"content-type":"application/json"}});
   }catch(e){ return new Response(JSON.stringify({ok:false}),{status:500,headers:{"content-type":"application/json"}}); }
 }
