@@ -556,7 +556,7 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .sec h2{font-size:clamp(22px,3.5vw,30px);font-weight:900;letter-spacing:-.02em;text-align:center}
 .sec .lead{text-align:center;color:#6b5d50;margin-top:10px;max-width:560px;margin:10px auto 0}
 .grid{display:grid;gap:16px;margin-top:30px}
-.subj-grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.subj-grid{grid-template-columns:repeat(auto-fill,200px);justify-content:start}
 .feat-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow);transition:transform .15s;display:block}
 .card:hover{transform:translateY(-4px)}
@@ -668,7 +668,7 @@ function layout({title,desc,canonical,body,ld,image}){
 </head><body>
 <nav class="nav"><div class="wrap nav-in"><a href="/" class="logo"><span class="mk">1:1</span><span class="wm">세상의<b>모든</b>과외</span></a>
 <button class="nav-cta" onclick="openForm()">무료 상담 신청</button></div></nav>
-${body}${footer()}${fab()}${formModal()}<script>${JS}</script></body></html>`;
+${body}${footer()}${fab()}${formModal()}<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script><script>${JS}</script></body></html>`;
 }
 function footer(){
   return `<footer class="foot"><div class="wrap"><a href="/" class="logo"><span class="mk">1:1</span><span class="wm">세상의<b>모든</b>과외</span></a>
@@ -686,11 +686,11 @@ function formModal(){
   return `<div class="modal" id="formModal"><div class="modal-box" id="formBody">
   <button class="mclose" onclick="closeForm()">×</button><h3>무료 상담 신청</h3>
   <p class="d">조건에 맞는 선생님을 찾아 빠르게 연락드립니다.</p>
-  <div class="field"><label>학생 이름 / 학년</label><input id="f_name" placeholder="예: 김OO / 중2"></div>
-  <div class="field"><label>연락처</label><input id="f_phone" placeholder="예: 010-1234-5678"></div>
-  <div class="field"><label>지역</label><input id="f_region" placeholder="예: 관악구 봉천동"></div>
-  <div class="field"><label>과목</label><select id="f_subject">${SUBJECTS.map(s=>`<option value="${s.name}">${s.name}</option>`).join("")}</select></div>
-  <div class="field"><label>수업 방식</label><select id="f_mode"><option value="방문">방문 과외</option><option value="화상">화상 과외</option><option value="상관없음">상관없음</option></select></div>
+  <div class="field"><label>학생 이름 *</label><input id="f_name" placeholder="예: 김OO"></div>
+  <div class="field"><label>학년 *</label><input id="f_grade" placeholder="예: 중2"></div>
+  <div class="field"><label>연락처 *</label><input id="f_phone" placeholder="예: 010-1234-5678"></div>
+  <div class="field"><label>지역 *</label><input id="f_region" readonly onclick="openAddr()" placeholder="클릭해서 주소 검색" style="cursor:pointer;background:#fffdfb"></div>
+  <div class="field"><label>과목 *</label><select id="f_subject">${SUBJECTS.map(s=>`<option value="${s.name}">${s.name}</option>`).join("")}</select></div>
   <div class="field"><label>남기실 말 (선택)</label><textarea id="f_memo" rows="2" placeholder="목표, 가능 시간 등"></textarea></div>
   <button class="btn btn-p" style="width:100%;justify-content:center;margin-top:16px" id="submitBtn" onclick="submitForm()">상담 신청하기</button>
 </div></div>`;
@@ -702,10 +702,16 @@ document.getElementById('formModal').classList.add('open');if(pre&&pre.subject){
 function closeForm(){document.getElementById('formModal').classList.remove('open')}
 function resetAndClose(){var fb=document.getElementById('formBody');if(_fh!==null)fb.innerHTML=_fh;document.getElementById('formModal').classList.remove('open');}
 function fillForm(region,subject){openForm({region:region,subject:subject})}
+function openAddr(){if(typeof daum==='undefined'||!daum.Postcode){alert('주소 검색을 불러오는 중입니다. 잠시 후 다시 시도해주세요.');return;}new daum.Postcode({oncomplete:function(data){var v=data.roadAddress||data.jibunAddress||data.address;document.getElementById('f_region').value=v;}}).open();}
 function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
 async function submitForm(){var btn=document.getElementById('submitBtn');
-var d={name:val('f_name'),phone:val('f_phone'),region:val('f_region'),subject:val('f_subject'),mode:val('f_mode'),memo:val('f_memo'),page:location.pathname};
-if(!d.phone){alert('연락처를 입력해주세요.');return;}btn.textContent='신청 중...';btn.disabled=true;
+var d={name:val('f_name'),grade:val('f_grade'),phone:val('f_phone'),region:val('f_region'),subject:val('f_subject'),memo:val('f_memo'),page:location.pathname};
+if(!d.name){alert('학생 이름을 입력해주세요.');return;}
+if(!d.grade){alert('학년을 입력해주세요.');return;}
+if(!d.phone){alert('연락처를 입력해주세요.');return;}
+if(!d.region){alert('지역을 선택해주세요.');return;}
+if(!d.subject){alert('과목을 선택해주세요.');return;}
+btn.textContent='신청 중...';btn.disabled=true;
 try{await fetch('/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});
 document.getElementById('formBody').innerHTML='<div style="text-align:center;padding:20px 6px"><div style="font-size:46px">✅</div><h3 style="margin-top:10px">신청이 완료되었습니다</h3><p style="color:#8a7a6d;margin-top:8px">빠른 시일 내에 연락드리겠습니다. 감사합니다.</p><button class="btn btn-o" style="width:100%;justify-content:center;margin-top:18px" onclick="resetAndClose()">닫기</button></div>';
 }catch(e){btn.textContent='상담 신청하기';btn.disabled=false;alert('전송에 실패했습니다. 다시 시도해주세요.');}}
