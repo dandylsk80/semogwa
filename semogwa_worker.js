@@ -670,6 +670,8 @@ function layout({title,desc,canonical,body,ld,image}){
 <link rel="apple-touch-icon" href="/favicon.svg">
 <link rel="mask-icon" href="/favicon.svg" color="#ff6b35">
 <style>${CSS}</style>${jsonld(ldArr)}
+<script type="text/javascript" src="//wcs.pstatic.net/wcslog.js"></script>
+<script type="text/javascript">if(!wcs_add) var wcs_add = {};wcs_add["wa"] = "1ad8866f4f074f0";if(window.wcs){wcs_do();}</script>
 </head><body>
 <nav class="nav"><div class="wrap nav-in"><a href="/" class="logo"><span class="mk">1:1</span><span class="wm">세상의<b>모든</b>과외</span></a>
 <button class="nav-cta" onclick="openForm()">무료 상담 신청</button></div></nav>
