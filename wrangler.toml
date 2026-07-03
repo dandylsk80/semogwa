@@ -2,3 +2,8 @@ name = "semogwa"
 main = "semogwa_worker.js"
 compatibility_date = "2026-05-25"
 compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "allcare_stats"
+database_id = "d53a86d3-c541-4a3d-9358-bca98b1f71b4"
