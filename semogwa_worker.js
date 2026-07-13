@@ -664,6 +664,7 @@ function layout({title,desc,canonical,body,ld,image}){
 <meta property="og:site_name" content="${SITE}"><meta property="og:image" content="${esc(og)}">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${esc(og)}">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="shortcut icon" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,800;1,900&display=swap" rel="stylesheet">
@@ -1132,10 +1133,10 @@ async function handleInquiry(request, env){
 export default {
   async fetch(request, env){
     const url=new URL(request.url); const path=url.pathname;
-    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.get("User-Agent")||"";const isBot=/bot|crawl|spider|slurp|mediapartners|googlebot|bingbot|yandex|baidu|duckduckbot|facebookexternalhit|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|headlesschrome|python-requests|curl|wget/i.test(ua);const ts=new Date().toISOString();if(env&&env.DB&&!(b.type==="view"&&isBot)&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare("INSERT INTO events (site,type,page,ref,ip,ts) VALUES (?,?,?,?,?,?)").bind("semogwa",b.type,(b.page||"").slice(0,300),(b.ref||"").slice(0,120),ip,ts).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
+    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOString();if(env&&env.DB&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare("INSERT INTO events (site,type,page,ref,ip,ts) VALUES (?,?,?,?,?,?)").bind("semogwa",b.type,(b.page||"").slice(0,300),(b.ref||"").slice(0,120),ip,ts).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
     if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(request.method==="POST"&&path==="/api/inquiry") return handleInquiry(request,env);
-    if(path==="/favicon.svg") return new Response(SVG_FAVICON,{headers:{"content-type":"image/svg+xml","cache-control":"public, max-age=604800"}});
+    if(path==="/favicon.svg"||path==="/favicon.ico") return new Response(SVG_FAVICON,{headers:{"content-type":"image/svg+xml","cache-control":"public, max-age=604800"}});
     if(path==="/robots.txt") return new Response(robots(),{headers:{"content-type":"text/plain;charset=UTF-8"}});
     if(path==="/rss.xml") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
     if(path==="/41990cbcc27241c6b899d18d983370a3.txt") return new Response("41990cbcc27241c6b899d18d983370a3",{headers:{"content-type":"text/plain;charset=UTF-8"}});
