@@ -1150,6 +1150,7 @@ async function handleInquiry(request, env){
 export default {
   async fetch(request, env){
     const url=new URL(request.url); const path=url.pathname;
+    if(url.hostname.startsWith("www.")) return Response.redirect(ORIGIN+path+url.search,301);
     if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ts=new Date().toISOString();if(env&&env.DB&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare("INSERT INTO events (site,type,page,ref,ip,ts) VALUES (?,?,?,?,?,?)").bind("semogwa",b.type,(b.page||"").slice(0,300),(b.ref||"").slice(0,120),ip,ts).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
     if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(request.method==="POST"&&path==="/api/inquiry") return handleInquiry(request,env);
