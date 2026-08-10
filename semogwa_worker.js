@@ -326,8 +326,14 @@ function buildDongSubject(region, subj){
   const C = commonPools(Z, S);
   const deep = pick3(subjectDeep(subj.slug, Z), r);
   let h = dateMeta(pageDates(region.slug+"|"+subj.slug));
-  h += vSummary(`${Z} ${S} 과외, 어떻게 시작하나요?`,
-    `${Z}에서 방문·화상 1:1 ${S} 과외를 무료 상담으로 시작할 수 있습니다. 학생 수준에 맞는 검증된 ${S} 선생님을 매칭하고, 집에서 또는 가까운 곳에서 수업합니다. 아래에서 신청만 남기면 빠르게 연락드립니다.`);
+  h += vSummary(pick([`${Z} ${S} 과외, 어떻게 시작하나요?`,`${Z} ${S} 과외 신청 전에 알아둘 것`,`${Z}에서 ${S} 선생님 찾는 방법`,`${Z} ${S} 과외, 한눈에 정리`,`${Z} ${S} 과외 매칭은 이렇게 진행됩니다`],r),
+    pick([
+      `${Z}에서 방문·화상 1:1 ${S} 과외를 무료 상담으로 시작할 수 있습니다. 학생 수준에 맞는 검증된 ${S} 선생님을 매칭하고, 집에서 또는 가까운 곳에서 수업합니다. 아래에서 신청만 남기면 빠르게 연락드립니다.`,
+      `상담 신청서를 남기면 ${Z} 인근에서 수업 가능한 ${S} 선생님을 찾아 연락드립니다. 학년과 현재 성적, 원하는 요일을 알려주시면 조건에 맞는 분으로 좁혀 드립니다. 비용은 상담 단계에서 미리 안내됩니다.`,
+      `${Z} ${S} 과외는 대면 방문과 화상 수업 중 편한 쪽을 고르면 됩니다. 학력·경력을 확인한 선생님만 연결하며, 첫 수업 전에 학생 상태를 짚어 보는 시간을 따로 둡니다. 상담까지는 비용이 들지 않습니다.`,
+      `아이에게 맞는 ${S} 선생님을 ${Z}에서 찾고 계시다면 무료 상담부터 이용해 보세요. 과목별 약점과 목표 성적을 기준으로 후보를 추린 뒤, 조건이 맞는 분을 순서대로 안내해 드립니다.`,
+      `${Z} 지역 1:1 ${S} 과외 매칭입니다. 신청 후 보통 하루 안에 연락드리며, 방문이 어려운 시간대라면 화상으로도 같은 커리큘럼을 진행할 수 있습니다. 선생님 교체 요청도 언제든 가능합니다.`,
+    ],r));
   h += H(`📚 ${Z} ${S} 과외, 세상의모든과외에서`) + P(pick(C.intro,r));
   h += H(`🎯 1:1 ${S} 과외가 필요한 이유`) + P(pick(C.why1,r)) + P(pick(C.why2,r));
   h += vICards([
@@ -388,7 +394,14 @@ function buildArea(levelName, Z, childLabel, children){
   const r = rng(hash(Z + "|area"));
   const C = commonPools(Z, "과목");
   let h = dateMeta(pageDates(Z+"|area"));
-  h += vSummary(`${Z} 과외, 어떻게 시작하나요?`, `${Z}에서 국어·영어·수학·사회·과학을 방문·화상 1:1 과외로 시작할 수 있습니다. 검증된 선생님을 학생 수준에 맞춰 매칭하며, 무료 상담으로 먼저 알아볼 수 있습니다.`);
+  h += vSummary(pick([`${Z} 과외, 어떻게 시작하나요?`,`${Z} 과외 신청 전에 알아둘 것`,`${Z}에서 과외 선생님 찾는 방법`,`${Z} 과외, 한눈에 정리`,`${Z} 과외 매칭은 이렇게 진행됩니다`],r),
+    pick([
+      `${Z}에서 국어·영어·수학·사회·과학을 방문·화상 1:1 과외로 시작할 수 있습니다. 검증된 선생님을 학생 수준에 맞춰 매칭하며, 무료 상담으로 먼저 알아볼 수 있습니다.`,
+      `${Z} 인근에서 수업 가능한 선생님을 과목별로 연결해 드립니다. 학년과 목표를 남겨주시면 조건에 맞는 분을 추려 순서대로 안내합니다. 상담 단계까지는 비용이 들지 않습니다.`,
+      `${Z} 1:1 과외는 방문과 화상 중 편한 방식을 고르면 됩니다. 다섯 과목 모두 학력·경력을 확인한 선생님만 매칭하며, 수업 전에 학생 상태를 점검하는 시간을 따로 둡니다.`,
+      `아이에게 맞는 선생님을 ${Z}에서 찾고 계시다면 무료 상담부터 이용해 보세요. 과목별 약점을 기준으로 후보를 좁힌 뒤, 요일과 시간대가 맞는 분을 연결해 드립니다.`,
+      `${Z} 지역 과외 매칭 안내입니다. 신청 후 보통 하루 안에 연락드리고, 방문이 어려운 상황이면 화상으로도 같은 커리큘럼을 이어갈 수 있습니다.`,
+    ],r));
   h += H(`📘 ${Z} 과외, 세상의모든과외에서`) + P(pick(C.intro,r)) + P(pick(C.why2,r));
   h += H(`🎯 ${Z}에서 1:1 과외가 필요한 이유`) + P(pick2(C.why1,r).join("")) ;
   h += vICards([{e:"🏠",b:"방문 · 화상 모두",s:"상황에 맞게 선택"},{e:"👤",b:"1:1 전담",s:"한 명을 위한 수업"},{e:"🎓",b:"검증된 선생님",s:"학력·경력 확인"},{e:"🌍",b:"전국 매칭",s:"지역 제한 없음"}]);
@@ -545,6 +558,13 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .regpills{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:28px}
 .regpills a{background:#fff;border:1px solid var(--line);border-radius:999px;padding:11px 20px;font-weight:700;font-size:14.5px;box-shadow:var(--shadow);transition:transform .12s}
 .regpills a:hover{transform:translateY(-2px);border-color:var(--brand);color:#e0510e}
+.sidogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-top:22px}
+.sidogrid .sgcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.sidogrid .sgcard b{display:block;font-size:15px;margin-bottom:8px}
+.sidogrid .sgcard b a{color:#1b1b1b}
+.sidogrid .sgcard span{display:flex;flex-wrap:wrap;gap:6px}
+.sidogrid .sgcard span a{font-size:13px;color:#6a6a6a;background:#f6f6f7;border-radius:999px;padding:4px 10px}
+.sidogrid .sgcard span a:hover{color:#e0510e;background:#fdeee6}
 .ctaband{background:#2c2018 center/cover no-repeat;border-radius:28px;padding:60px 32px;text-align:center;color:#fff;box-shadow:0 24px 50px -20px rgba(60,30,10,.45);overflow:hidden}
 .ctaband h2{color:#fff;font-size:clamp(26px,4vw,38px);font-weight:900;text-shadow:0 2px 14px rgba(0,0,0,.5)}
 .ctaband p{color:rgba(255,255,255,.96);margin-top:12px;font-size:16px;text-shadow:0 1px 10px rgba(0,0,0,.5)}
@@ -771,6 +791,8 @@ function pageHome(){
 
 <section class="sec alt"><div class="wrap">
   <div class="sec-head"><div class="k">REGIONS</div><h2>지역으로 찾기</h2><p class="lead">우리 동네를 선택하면 동네 맞춤 과외 페이지로 이동합니다.</p></div>
+  <div class="regpills">${SIDO_LIST.map(sd=>`<a href="/${sd.slug}">${sd.name} 과외</a>`).join("")}</div>
+  <div class="sidogrid">${SIDO_LIST.map(sd=>`<div class="sgcard"><b><a href="/${sd.slug}">${sd.name}</a></b><span>${SUBJECTS.map(s=>`<a href="/${sd.slug}/${s.slug}">${s.name}</a>`).join("")}</span></div>`).join("")}</div>
   <div class="regpills"><a href="/regions" style="background:linear-gradient(135deg,#e0480a,#ff6a14);color:#fff;border:0;padding:14px 28px;font-size:15px">📍 전체 지역에서 찾기 →</a></div>
 </div></section>
 
@@ -1060,7 +1082,11 @@ function pageRegionSubject(r, s){
 ${thumb(null, esc(sn)+" "+esc(s.name), esc(sn)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
 <article class="article">${art}
 <div class="trial"><b>${esc(sn)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sn)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
-<div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(r.sigungu)} 다른 동네 ${esc(s.name)} 과외</h2>${nearbyDongs(r,s.slug)}
+<div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sn)} 다른 과목 과외</h2>
+<div class="regpills" style="justify-content:flex-start;margin-top:12px">${SUBJECTS.filter(x=>x.slug!==s.slug).map(x=>`<a href="/${r.slug}/${x.slug}">${esc(sn)} ${esc(x.name)} 과외</a>`).join("")}</div>
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(r.sigungu)} 다른 동네 ${esc(s.name)} 과외</h2>${nearbyDongs(r,s.slug)}
+<h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sd.name)} ${esc(s.name)} 과외</h2>
+<div class="regpills" style="justify-content:flex-start;margin-top:12px"><a href="/${sd.slug}/${s.slug}">${esc(sd.name)} ${esc(s.name)} 과외</a><a href="/${gs}/${s.slug}">${esc(r.sigungu)} ${esc(s.name)} 과외</a><a href="/${s.slug}">전국 ${esc(s.name)} 과외</a></div>
 <div style="margin-top:18px"><a class="btn btn-o" href="/${r.slug}">← ${esc(sn)} 다른 과목</a></div></div></div></section>`;
   return layout({title:`${sn} ${s.name} 과외 · 방문·화상 1:1 | ${SITE}`,desc:`${sn} ${s.name} 과외를 찾으세요. 방문·화상 1:1로 검증된 ${s.name} 선생님 매칭. ${sn} 초·중·고 ${s.name} 과외 무료 상담.`,canonical:`${ORIGIN}/${r.slug}/${s.slug}`,body,ld});
 }
