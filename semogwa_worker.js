@@ -146,7 +146,7 @@ function thumb(seedKey, kw, title, color){
   const img = imgFor(seedKey || kw);
   const grad = color ? `linear-gradient(135deg,${color}33,#ffe9d6)` : `linear-gradient(135deg,#ffd9b8,#ffe9d6)`;
   return `<div class="thumb has-img" style="background-image:linear-gradient(180deg,rgba(44,32,24,.18),rgba(44,32,24,.62)),url('${img}'),${grad}">
-    <span class="kw">${esc(kw)}</span><h1>${title}</h1></div>`;
+    <span class="kw">${esc(kw)}</span><h1>${title}</h1><span class="subt">방문 · 화상 1:1 매칭</span></div>`;
 }
 
 // 공통 문장풀 (지역명 Z, 과목 S 치환)
@@ -632,7 +632,9 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 /* 이미지 썸네일 */
 .thumb.has-img{background-size:cover;background-position:center}
 .thumb.has-img::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(44,32,24,.15),rgba(44,32,24,.62))}
-.thumb.has-img .kw,.thumb.has-img h1{position:relative;z-index:1}
+.thumb.has-img .kw,.thumb.has-img h1,.thumb.has-img .subt{position:relative;z-index:1}
+.thumb .subt{display:block;margin-top:10px;font-size:14px;font-weight:700;color:#6b5d50}
+.thumb.has-img .subt{color:rgba(255,255,255,.9);text-shadow:0 1px 8px rgba(0,0,0,.45)}
 .thumb.has-img h1{color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.4)}
 @media(max-width:600px){.steps .st:not(:last-child)::after{display:none}}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
@@ -845,7 +847,7 @@ function pageSido(sd){
   const body=`
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/regions">전국</a> › ${esc(sd.name)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
-${thumb(null, esc(sd.name)+" 과외", esc(sd.name)+"<br>1:1 과외 (국영수사과)")}
+${thumb(null, esc(sd.name)+" 과외", esc(sd.name)+" 과외")}
 <article class="article">${art}
 <div class="trial"><b>${esc(sd.name)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sd.name)}','')">상담 신청하기 →</button></div></article>
 <div class="bodycol">
@@ -896,7 +898,7 @@ function pageSidoSubject(sd, s){
   const body=`
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › ${esc(s.name)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
-${thumb(null, esc(sd.name)+" "+esc(s.name), esc(sd.name)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
+${thumb(null, esc(sd.name)+" "+esc(s.name), esc(sd.name)+" "+esc(s.name)+" 과외", s.color)}
 <article class="article">${art}
 <div class="trial"><b>${esc(sd.name)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sd.name)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
 <div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sd.name)} 시·군·구 ${esc(s.name)} 과외</h2>
@@ -918,7 +920,7 @@ function pageGu(g){
   const body=`
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a>${cityBc} › ${esc(guLabel)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
-${thumb(null, esc(g.sigungu)+" 과외", esc(g.sigungu)+"<br>1:1 과외 (국영수사과)")}
+${thumb(null, esc(g.sigungu)+" 과외", esc(g.sigungu)+" 과외")}
 <article class="article">${art}
 <div class="trial"><b>${esc(g.sigungu)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(g.sigungu)}','')">상담 신청하기 →</button></div></article>
 <div class="bodycol">
@@ -940,7 +942,7 @@ function pageCity(c){
   const body=`
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › ${esc(c.city)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
-${thumb(null, esc(c.city)+" 과외", esc(c.city)+"<br>1:1 과외 (국영수사과)")}
+${thumb(null, esc(c.city)+" 과외", esc(c.city)+" 과외")}
 <article class="article">${art}
 <div class="trial"><b>${esc(c.city)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(c.city)}','')">상담 신청하기 →</button></div></article>
 <div class="bodycol">
@@ -984,7 +986,7 @@ function pageCitySubject(c, s){
   const body=`
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › <a href="/${c.slug}">${esc(c.city)}</a> › ${esc(s.name)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
-${thumb(null, esc(c.city)+" "+esc(s.name), esc(c.city)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
+${thumb(null, esc(c.city)+" "+esc(s.name), esc(c.city)+" "+esc(s.name)+" 과외", s.color)}
 <article class="article">${art}
 <div class="trial"><b>${esc(c.city)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(c.city)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
 <div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(c.city)} 구별 ${esc(s.name)} 과외</h2>
@@ -1032,7 +1034,7 @@ function pageGuSubject(g, s){
   const body=`
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › <a href="/${g.slug}">${esc(g.sigungu)}</a> › ${esc(s.name)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
-${thumb(null, esc(g.sigungu)+" "+esc(s.name), esc(g.sigungu)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
+${thumb(null, esc(g.sigungu)+" "+esc(s.name), esc(g.sigungu)+" "+esc(s.name)+" 과외", s.color)}
 <article class="article">${art}
 <div class="trial"><b>${esc(g.sigungu)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(g.sigungu)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
 <div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(g.sigungu)} 동네별 ${esc(s.name)} 과외</h2>
@@ -1057,7 +1059,7 @@ function pageRegion(r){
   const body=`
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › <a href="/${gs}">${esc(r.sigungu)}</a> › ${esc(r.dong)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
-${thumb(null, esc(sn)+" 과외", esc(sn)+"<br>1:1 과외 (국영수사과)")}
+${thumb(null, esc(sn)+" 과외", esc(sn)+" 과외")}
 <article class="article">${art}
 <div class="trial"><b>${esc(sn)} 과외 무료 상담</b><span>지역·과목만 남기면 맞는 선생님을 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sn)}','')">상담 신청하기 →</button></div></article>
 <div class="bodycol">
@@ -1079,7 +1081,7 @@ function pageRegionSubject(r, s){
   const body=`
 <div class="wrap"><div class="bc"><a href="/">홈</a> › <a href="/${sd.slug}">${esc(sd.name)}</a> › <a href="/${gs}">${esc(r.sigungu)}</a> › <a href="/${r.slug}">${esc(r.dong)}</a> › ${esc(s.name)}</div></div>
 <section class="sec" style="padding-top:16px"><div class="wrap">
-${thumb(null, esc(sn)+" "+esc(s.name), esc(sn)+"<br>"+esc(s.name)+" 1:1 과외", s.color)}
+${thumb(null, esc(sn)+" "+esc(s.name), esc(sn)+" "+esc(s.name)+" 과외", s.color)}
 <article class="article">${art}
 <div class="trial"><b>${esc(sn)} ${esc(s.name)} 과외 무료 상담</b><span>지금 신청하면 맞는 선생님을 빠르게 연결해 드립니다.</span><button class="btn" onclick="fillForm('${esc(sn)}','${esc(s.name)}')">상담 신청하기 →</button></div></article>
 <div class="bodycol"><h2 style="margin-top:32px;font-size:18px;text-align:left">${esc(sn)} 다른 과목 과외</h2>
