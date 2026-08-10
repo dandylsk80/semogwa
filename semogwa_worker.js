@@ -1106,16 +1106,33 @@ function sitemapPart(i){
   if(!sl.length) return null;
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sl.map(u=>`<url><loc>${u}</loc></url>`).join("\n")}\n</urlset>`;
 }
-function robots(){return `User-agent: *\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n#DaumWebMasterTool:e31ac100a8e02f1222092e1356c4397aa929d74df17bb1a018697711f9a49325:2Wt1IlppU2Sk9kz+Yoxcqw==\n`;}
+function robots(){return `User-agent: *\nAllow: /\nUser-agent: Yeti\nAllow: /\nUser-agent: Naverbot\nAllow: /\nUser-agent: Googlebot\nAllow: /\nUser-agent: bingbot\nAllow: /\nUser-agent: Daum\nAllow: /\nUser-agent: Daumoa\nAllow: /\nSitemap: ${ORIGIN}/sitemap.xml\n#DaumWebMasterTool:e31ac100a8e02f1222092e1356c4397aa929d74df17bb1a018697711f9a49325:2Wt1IlppU2Sk9kz+Yoxcqw==\n`;}
+const INDEXNOW_KEY_SEMOGWA="41990cbcc27241c6b899d18d983370a3";
+async function indexnowPing(u){
+  const all=allUrls();
+  const start=Math.max(0,parseInt((u&&u.searchParams.get("start"))||"0")||0);
+  const n=Math.min(10000,Math.max(1,parseInt((u&&u.searchParams.get("n"))||"1000")||1000));
+  const urls=all.slice(start,start+n);
+  if(!urls.length) return new Response(`제출할 URL 없음 (전체 ${all.length}개, start=${start})`,{headers:{"content-type":"text/plain; charset=utf-8"}});
+  const payload={ host:new URL(ORIGIN).host, key:INDEXNOW_KEY_SEMOGWA, keyLocation:`${ORIGIN}/${INDEXNOW_KEY_SEMOGWA}.txt`, urlList:urls };
+  try{
+    const resp=await fetch("https://api.indexnow.org/indexnow",{ method:"POST", headers:{"Content-Type":"application/json; charset=utf-8"}, body:JSON.stringify(payload) });
+    const next=start+urls.length;
+    return new Response(`IndexNow 제출 완료\n범위: ${start} ~ ${next-1}\n제출 URL 수: ${urls.length}\n전체 URL 수: ${all.length}\n응답 코드: ${resp.status}\n다음: ${ORIGIN}/indexnow-ping?start=${next}&n=${n}`,{headers:{"content-type":"text/plain; charset=utf-8"}});
+  }catch(e){ return new Response(`IndexNow 제출 실패: ${e.message}`,{status:500,headers:{"content-type":"text/plain; charset=utf-8"}}); }
+}
 function rssFeed(){
   const base=[];
   for(const sd of SIDO_LIST) base.push({u:`/${sd.slug}`,t:`${sd.name} 1:1 과외`});
   for(const cs in CITY_MAP) base.push({u:`/${cs}`,t:`${CITY_MAP[cs].city} 1:1 과외`});
   for(const gs in GU_MAP) base.push({u:`/${gs}`,t:`${GU_MAP[gs].sigungu} 1:1 과외`});
   for(const r of regions) base.push({u:`/${r.slug}`,t:`${shortName(r.name)} 1:1 과외`});
-  const items=base.slice(0,1000).map(it=>{
-    const d=pageDates(it.u);
-    return `<item><title>${esc(it.t)}</title><link>${ORIGIN}${it.u}</link><guid>${ORIGIN}${it.u}</guid><pubDate>${new Date(d.modISO).toUTCString()}</pubDate><description>${esc(it.t)} · 방문·화상 1:1 과외 매칭. 국어·영어·수학·사회·과학.</description></item>`;
+  for(const r of regions){ for(const s of SUBJECTS) base.push({u:`/${r.slug}/${s.slug}`,t:`${shortName(r.name)} ${s.name} 과외`}); }
+  for(const gs in GU_MAP){ for(const s of SUBJECTS) base.push({u:`/${gs}/${s.slug}`,t:`${GU_MAP[gs].sigungu} ${s.name} 과외`}); }
+  const ranked=base.map(it=>{ const d=pageDates(it.u); return {...it,d,ts:new Date(d.modISO).getTime()}; })
+    .sort((a,b)=>b.ts-a.ts).slice(0,1000);
+  const items=ranked.map(it=>{
+    return `<item><title>${esc(it.t)}</title><link>${ORIGIN}${it.u}</link><guid>${ORIGIN}${it.u}</guid><pubDate>${new Date(it.d.modISO).toUTCString()}</pubDate><description>${esc(it.t)} · 방문·화상 1:1 과외 매칭. 국어·영어·수학·사회·과학.</description></item>`;
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>${SITE}</title><link>${ORIGIN}</link><description>전국 방문·화상 1:1 과외 매칭 · 국어·영어·수학·사회·과학</description><language>ko</language>${items}</channel></rss>`;
 }
@@ -1140,6 +1157,7 @@ export default {
     if(path==="/robots.txt") return new Response(robots(),{headers:{"content-type":"text/plain;charset=UTF-8"}});
     if(path==="/rss.xml") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
     if(path==="/41990cbcc27241c6b899d18d983370a3.txt") return new Response("41990cbcc27241c6b899d18d983370a3",{headers:{"content-type":"text/plain;charset=UTF-8"}});
+    if(path==="/indexnow-ping") return indexnowPing(url);
     if(path==="/sitemap.xml") return new Response(sitemapIndex(),{headers:{"content-type":"application/xml;charset=UTF-8"}});
     const sm=path.match(/^\/sitemap-(\d+)\.xml$/);
     if(sm){const p=sitemapPart(parseInt(sm[1],10)); if(p) return new Response(p,{headers:{"content-type":"application/xml;charset=UTF-8"}}); return html(page404(),404);}
