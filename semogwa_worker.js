@@ -1213,5 +1213,28 @@ export default {
       return html(page404(),404);
     }
     return html(page404(),404);
+  },
+
+  // 매일 자동 실행: 하루 500개씩 IndexNow 제출 (날짜 기준으로 구간 계산)
+  async scheduled(event, env, ctx){
+    const all=allUrls();
+    const PER_DAY=500;
+    const DAY0=Date.UTC(2026,7,19);            // 2026-08-19 시작
+    const dayNo=Math.max(0,Math.floor((Date.now()-DAY0)/86400000));
+    const cycles=Math.ceil(all.length/PER_DAY); // 전체를 다 돌면 처음부터 반복
+    const start=(dayNo%cycles)*PER_DAY;
+    let batch=all.slice(start,start+PER_DAY);
+    if(!batch.length) return;
+
+    // 429가 나면 절반으로 줄여 재시도 (최대 4회)
+    for(let attempt=0; attempt<4; attempt++){
+      const payload={ host:new URL(ORIGIN).host, key:INDEXNOW_KEY_SEMOGWA, keyLocation:`${ORIGIN}/${INDEXNOW_KEY_SEMOGWA}.txt`, urlList:batch };
+      try{
+        const resp=await fetch("https://api.indexnow.org/indexnow",{ method:"POST", headers:{"Content-Type":"application/json; charset=utf-8"}, body:JSON.stringify(payload) });
+        if(resp.status!==429) return;           // 성공이든 다른 오류든 종료
+      }catch(e){ return; }
+      batch=batch.slice(0,Math.max(100,Math.floor(batch.length/2)));
+      await new Promise(r=>setTimeout(r,3000));
+    }
   }
 };
