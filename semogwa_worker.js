@@ -1200,23 +1200,23 @@ function tgDescribe(path) {
   if (REGION_MAP[p0]) {
     const r = REGION_MAP[p0];
     const base = r.sido + ' ' + r.sigungu + ' ' + r.dong;
-    return subj ? base + ' · ' + subj : base;
+    return (subj ? base + ' ' + subj : base) + ' 과외';
   }
   // /seoul-dobonggu[/korean]
   if (GU_MAP[p0]) {
     const g = GU_MAP[p0];
     const base = g.sido.name + ' ' + g.sigungu;
-    return subj ? base + ' · ' + subj : base;
+    return (subj ? base + ' ' + subj : base) + ' 과외';
   }
   // /gyeonggi-goyangsi[/korean]
   if (CITY_MAP[p0]) {
     const c = CITY_MAP[p0];
     const base = c.sido.name + ' ' + c.city;
-    return subj ? base + ' · ' + subj : base;
+    return (subj ? base + ' ' + subj : base) + ' 과외';
   }
   // /seoul[/korean]
   const sd = SIDO_LIST.find(x => x.slug === p0);
-  if (sd) return subj ? sd.name + ' · ' + subj : sd.name;
+  if (sd) return (subj ? sd.name + ' ' + subj : sd.name) + ' 과외';
 
   return '일반 페이지';
 }
@@ -1260,7 +1260,7 @@ async function tgNotify(env, type, page, ref, ua) {
   L.push('');
   L.push('사이트: ' + TG_SITE + ' (' + TG_DOMAIN + ')');
   L.push('페이지: ' + TG_ORIGIN + page);
-  L.push('한글: ' + tgDescribe(page));
+  L.push('검색 키워드: ' + tgDescribe(page));
   L.push('유입: ' + tgRef(ref));
   L.push('기기: ' + (/Mobile|Android|iPhone|iPad/i.test(ua || '') ? '모바일' : 'PC'));
   L.push('시각: ' + tgTime() + ' (KST)');
