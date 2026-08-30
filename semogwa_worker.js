@@ -1,3 +1,35 @@
+/* ===== 방문 상세 메타: 기기 / 유입경로 / 검색 키워드 ===== */
+function tkDevice(ua){
+  ua = ua || "";
+  if(/ipad|tablet|playbook|silk|kindle|android(?!.*mobile)/i.test(ua)) return "tablet";
+  if(/mobile|iphone|ipod|android|blackberry|iemobile|opera mini|webos/i.test(ua)) return "mobile";
+  return "pc";
+}
+function tkSource(ref, selfHost){
+  if(!ref) return "direct";
+  var h = "";
+  try{ h = new URL(ref).hostname.toLowerCase(); }catch(e){ return "etc"; }
+  if(!h) return "etc";
+  if(selfHost && (h === selfHost || h === "www." + selfHost)) return "direct"; /* 사이트 내부 이동 */
+  if(h.indexOf("naver") >= 0) return "naver";
+  if(h.indexOf("google") >= 0) return "google";
+  if(h.indexOf("daum") >= 0 || h.indexOf("kakao") >= 0) return "daum";
+  return "etc";
+}
+function tkKeyword(ref){
+  if(!ref) return "";
+  try{
+    var p = new URL(ref).searchParams;
+    var keys = ["query","q","keyword","wd","search_query","text"];
+    for(var i=0;i<keys.length;i++){ var v = p.get(keys[i]); if(v) return v.trim().slice(0,100); }
+  }catch(e){}
+  return "";
+}
+/* INSERT 의 ua/device/source/keyword 4개 값을 순서대로 반환 */
+function tkMeta(ua, ref, selfHost){
+  return [ (ua||"").slice(0,250), tkDevice(ua), tkSource(ref, selfHost), tkKeyword(ref) ];
+}
+
 /* IndexNow 폴백: api.indexnow.org / www.bing.com 은 Cloudflare Workers 의 공용
    아웃바운드 IP 에 429(TooManyRequests)를 반환하는 경우가 많다. IndexNow 는 참여
    엔드포인트 한 곳만 성공하면 나머지 엔진으로 전파되므로 순차 폴백한다. */
@@ -1295,7 +1327,8 @@ export default {
   async fetch(request, env, ctx){
     const url=new URL(request.url); const path=url.pathname;
     if(url.hostname.startsWith("www.")) return Response.redirect(ORIGIN+path+url.search,301);
-    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.get("User-Agent")||"";const ts=new Date().toISOString();if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua);if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||""))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare("INSERT INTO events (site,type,page,ref,ip,ts) VALUES (?,?,?,?,?,?)").bind("semogwa",b.type,(b.page||"").slice(0,300),(b.ref||"").slice(0,120),ip,ts).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
+    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.get("User-Agent")||"";const ts=new Date().toISOString();if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua);if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||""))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare('INSERT INTO events (site,type,page,ref,ip,ts,ua,device,source,keyword) VALUES (?,?,?,?,?,?,?,?,?,?)')
+            .bind('semogwa', b.type, (b.page||'').slice(0,300), (b.ref||'').slice(0,120), ip, ts, ...tkMeta(request.headers.get('User-Agent')||'', b.ref||'', 'semogwa.com')).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
     if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(request.method==="POST"&&path==="/api/inquiry") return handleInquiry(request,env);
     if(path==="/favicon.svg"||path==="/favicon.ico") return new Response(SVG_FAVICON,{headers:{"content-type":"image/svg+xml","cache-control":"public, max-age=604800"}});
