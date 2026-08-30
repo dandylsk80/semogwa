@@ -1,3 +1,19 @@
+/* IndexNow 폴백: api.indexnow.org / www.bing.com 은 Cloudflare Workers 의 공용
+   아웃바운드 IP 에 429(TooManyRequests)를 반환하는 경우가 많다. IndexNow 는 참여
+   엔드포인트 한 곳만 성공하면 나머지 엔진으로 전파되므로 순차 폴백한다. */
+const INDEXNOW_FALLBACK_EPS = ["https://api.indexnow.org/indexnow","https://yandex.com/indexnow","https://search.seznam.cz/indexnow"];
+async function indexnowFetch(opt){
+  let last=null;
+  for(const ep of INDEXNOW_FALLBACK_EPS){
+    try{
+      const r=await fetch(ep,opt);
+      if(r.status>=200&&r.status<300) return r;
+      last=r;
+    }catch(e){}
+  }
+  return last||{status:0};
+}
+
 /* 대시보드 방문자 집계용 봇 UA 필터 (크롤러를 방문자로 세지 않기 위함) */
 const BOT_UA_RE = /bot|crawl|spider|slurp|mediapartners|googlebot|bingbot|yandex|baidu|duckduckbot|facebookexternalhit|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|headlesschrome|python-requests|curl|wget|yeti|daumoa|lighthouse|pagespeed|inspectiontool|googleother|applebot|amazonbot|archiver|scrapy|node-fetch|okhttp|go-http|libwww|httpclient|dataforseo|serpstat|zoominfo|bubing|linkdex/i;
 // semogwa_worker.js — 세상의모든과외 (semogwa.com) v2
@@ -1146,7 +1162,7 @@ async function indexnowPing(u){
   if(!urls.length) return new Response(`제출할 URL 없음 (전체 ${all.length}개, start=${start})`,{headers:{"content-type":"text/plain; charset=utf-8"}});
   const payload={ host:new URL(ORIGIN).host, key:INDEXNOW_KEY_SEMOGWA, keyLocation:`${ORIGIN}/${INDEXNOW_KEY_SEMOGWA}.txt`, urlList:urls };
   try{
-    const resp=await fetch("https://api.indexnow.org/indexnow",{ method:"POST", headers:{"Content-Type":"application/json; charset=utf-8"}, body:JSON.stringify(payload) });
+    const resp=await indexnowFetch({ method:"POST", headers:{"Content-Type":"application/json; charset=utf-8"}, body:JSON.stringify(payload) });
     const next=start+urls.length;
     return new Response(`IndexNow 제출 완료\n범위: ${start} ~ ${next-1}\n제출 URL 수: ${urls.length}\n전체 URL 수: ${all.length}\n응답 코드: ${resp.status}\n다음: ${ORIGIN}/indexnow-ping?start=${next}&n=${n}`,{headers:{"content-type":"text/plain; charset=utf-8"}});
   }catch(e){ return new Response(`IndexNow 제출 실패: ${e.message}`,{status:500,headers:{"content-type":"text/plain; charset=utf-8"}}); }
@@ -1330,7 +1346,7 @@ export default {
     for(let attempt=0; attempt<4; attempt++){
       const payload={ host:new URL(ORIGIN).host, key:INDEXNOW_KEY_SEMOGWA, keyLocation:`${ORIGIN}/${INDEXNOW_KEY_SEMOGWA}.txt`, urlList:batch };
       try{
-        const resp=await fetch("https://api.indexnow.org/indexnow",{ method:"POST", headers:{"Content-Type":"application/json; charset=utf-8"}, body:JSON.stringify(payload) });
+        const resp=await indexnowFetch({ method:"POST", headers:{"Content-Type":"application/json; charset=utf-8"}, body:JSON.stringify(payload) });
         if(resp.status!==429) return;           // 성공이든 다른 오류든 종료
       }catch(e){ return; }
       batch=batch.slice(0,Math.max(100,Math.floor(batch.length/2)));
