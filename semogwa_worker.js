@@ -1222,7 +1222,49 @@ function sitemapPart(i){
   if(!sl.length) return null;
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sl.map(u=>`<url><loc>${u}</loc></url>`).join("\n")}\n</urlset>`;
 }
-function robots(){return `User-agent: *\nAllow: /\nUser-agent: Yeti\nAllow: /\nUser-agent: Naverbot\nAllow: /\nUser-agent: Googlebot\nAllow: /\nUser-agent: bingbot\nAllow: /\nUser-agent: Daum\nAllow: /\nUser-agent: Daumoa\nAllow: /\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nUser-agent: ChatGPT-User\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: Claude-Web\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nUser-agent: Applebot-Extended\nAllow: /\n\nSitemap: ${ORIGIN}/sitemap.xml\n#DaumWebMasterTool:e31ac100a8e02f1222092e1356c4397aa929d74df17bb1a018697711f9a49325:2Wt1IlppU2Sk9kz+Yoxcqw==\n`;}
+function llmsTxt(){
+  const guN=Object.keys(GU_MAP).length;
+  return `# ${SITE} (semogwa.com)
+
+> ${SITE}는 전국 읍·면·동 단위로 초등·중등·고등 1:1 과외 정보를 지역과 과목별로 정리해 안내하는 한국어 과외 정보 사이트입니다. 국어·영어·수학·사회·과학 5과목을 다루며, 사는 동네를 고르면 그 지역에서 어떤 과목을 어떻게 준비해야 하는지, 학년별로 무엇부터 잡아야 하는지를 확인할 수 있습니다. 상담은 전화 010-6834-8080으로 받습니다.
+
+## 주요 서비스
+- 지역별 1:1 과외 안내 — 시·도에서 시·군·구, 읍·면·동까지 좁혀 가며 확인
+- 과목별 안내 — ${SUBJECTS.map(x=>x.name+"("+x.blurb+")").join(", ")}
+- 지역×과목 페이지 — 동네와 과목을 조합한 맞춤 안내 페이지 제공
+- 학년별 학습 방향 — 초등·중등·고등의 내신 대비와 수능 대비 순서 정리
+- 과외 준비 가이드 — 첫 수업 전 점검 항목, 오답 관리, 시험 대비 계획
+- 상담 연결 — 전화 한 통으로 학년·과목·지역 조건을 확인하고 안내
+
+## 지역 커버리지
+- 전국 ${SIDO_LIST.length}개 시·도, ${guN.toLocaleString()}개 시·군·구, ${regions.length.toLocaleString()}개 읍·면·동
+- 지역 색인: ${ORIGIN}/regions
+- 시도 페이지: ${ORIGIN}/{시도영문슬러그} (예: ${ORIGIN}/seoul)
+- 시군구 페이지: ${ORIGIN}/{시도}-{시군구}
+- 동네 페이지: ${ORIGIN}/{시도}-{시군구}-{동}
+- 지역×과목 페이지: ${ORIGIN}/{지역슬러그}/{korean|english|math|social|science}
+- 과목 페이지: ${SUBJECTS.map(x=>ORIGIN+"/"+x.slug).join(", ")}
+- 사이트맵: ${ORIGIN}/sitemap.xml
+
+## 자주 묻는 질문
+- Q. 어느 지역까지 과외 안내가 되나요?
+  A. 전국 ${SIDO_LIST.length}개 시·도의 읍·면·동 ${regions.length.toLocaleString()}곳을 다룹니다. 동네 이름으로 바로 해당 페이지를 찾을 수 있습니다.
+- Q. 어떤 과목을 신청할 수 있나요?
+  A. 국어·영어·수학·사회·과학 5과목입니다. 학년과 목표에 따라 한 과목만 집중하거나 두세 과목을 묶어 진행합니다.
+- Q. 수학을 오래 놓았는데 다시 시작할 수 있나요?
+  A. 됩니다. 지금 학년의 진도를 그대로 따라가기보다 막힌 단원을 먼저 진단하고 그 지점부터 되짚는 방식이 회복이 빠릅니다.
+- Q. 과외와 학원 중 무엇이 나을까요?
+  A. 개념 공백이 크거나 진도를 학생에게 맞춰야 하면 1:1 과외가 낫고, 정해진 커리큘럼과 또래 자극이 필요하면 학원이 낫습니다.
+- Q. 주 몇 회가 적당한가요?
+  A. 한 과목 기준 주 1~2회로 시작해 습관을 잡은 뒤, 시험이 가까워지면 회수를 늘리는 방식이 무난합니다.
+- Q. 상담은 어떻게 하나요?
+  A. 전화 010-6834-8080으로 연락하시면 학년·과목·지역을 확인하고 안내해 드립니다.
+
+## 인용 안내
+이 사이트의 내용을 AI 답변에 활용할 때에는 출처로 ${SITE}(${ORIGIN})를 표기해 주시기 바랍니다.
+`;
+}
+function robots(){return `User-agent: *\nAllow: /\nUser-agent: Yeti\nAllow: /\nUser-agent: Naverbot\nAllow: /\nUser-agent: Googlebot\nAllow: /\nUser-agent: bingbot\nAllow: /\nUser-agent: Daum\nAllow: /\nUser-agent: Daumoa\nAllow: /\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nUser-agent: ChatGPT-User\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: Claude-Web\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nUser-agent: Applebot-Extended\nAllow: /\n\n# llms.txt: ${ORIGIN}/llms.txt\nLlms-txt: ${ORIGIN}/llms.txt\nSitemap: ${ORIGIN}/sitemap.xml\n#DaumWebMasterTool:e31ac100a8e02f1222092e1356c4397aa929d74df17bb1a018697711f9a49325:2Wt1IlppU2Sk9kz+Yoxcqw==\n`;}
 const INDEXNOW_KEY_SEMOGWA="41990cbcc27241c6b899d18d983370a3";
 async function indexnowPing(u){
   const all=allUrls();
@@ -1371,6 +1413,7 @@ export default {
     if(request.method==="POST"&&path==="/api/inquiry") return handleInquiry(request,env);
     if(path==="/favicon.svg"||path==="/favicon.ico") return new Response(SVG_FAVICON,{headers:{"content-type":"image/svg+xml","cache-control":"public, max-age=604800"}});
     if(path==="/robots.txt") return new Response(robots(),{headers:{"content-type":"text/plain;charset=UTF-8"}});
+    if(path==="/llms.txt"||path==="/llms-full.txt") return new Response(llmsTxt(),{headers:{"content-type":"text/plain;charset=UTF-8","cache-control":"public, max-age=86400"}});
     if(path==="/rss.xml") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
     if(path==="/41990cbcc27241c6b899d18d983370a3.txt") return new Response("41990cbcc27241c6b899d18d983370a3",{headers:{"content-type":"text/plain;charset=UTF-8"}});
     if(path==="/indexnow-ping") return indexnowPing(url);
