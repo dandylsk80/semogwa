@@ -64,6 +64,44 @@ function tkKeyword(ref){
   return "";
 }
 /* INSERT 의 ua/device/source/keyword 4개 값을 순서대로 반환 */
+/* ── 클라우드·데이터센터 IP 판별 (집계 제외용) ──────────────
+   실측 로그에서 확인된 사업자 대역만 넣는다. 1옥텟 전체(예: 43/8)를 막으면
+   한국 ISP 대역까지 걸리므로, 사업자가 실제로 보유한 구간으로 좁혔다.
+   사이트 접속을 막는 것이 아니라 방문 집계에서만 빼는 용도다.
+   IPv6 는 판정하지 않는다(관측된 IPv6 는 전부 국내 이동통신이었다). */
+const CLOUD_CIDRS = [
+  ["43.128.0.0",10],["82.156.0.0",14],["119.28.0.0",15],["120.53.0.0",16],
+  ["129.28.0.0",16],["150.109.0.0",16],["162.14.0.0",16],["170.106.0.0",16],
+  ["175.24.0.0",14],["182.254.0.0",16],["49.51.0.0",16],["106.52.0.0",14],
+  ["111.230.0.0",15],
+  ["116.179.32.0",20],["180.76.0.0",16],
+  ["121.36.0.0",14],["119.3.0.0",16],["122.112.0.0",16],["139.9.0.0",16],["116.63.0.0",16],
+  ["47.74.0.0",15],["47.88.0.0",14],["47.235.0.0",16],["8.208.0.0",13]
+];
+function ip2int(ip){
+  const p = String(ip || "").split(".");
+  if (p.length !== 4) return -1;
+  let n = 0;
+  for (let i = 0; i < 4; i++) {
+    if (p[i] === "" || !/^[0-9]{1,3}$/.test(p[i])) return -1;
+    const v = Number(p[i]);
+    if (v > 255) return -1;
+    n = n * 256 + v;
+  }
+  return n;
+}
+const CLOUD_RANGES = CLOUD_CIDRS.map(function(c){
+  const base = ip2int(c[0]);
+  const size = Math.pow(2, 32 - c[1]);
+  return [base, base + size - 1];
+});
+function isCloudIp(ip){
+  const n = ip2int(ip);
+  if (n < 0) return false;
+  for (let i = 0; i < CLOUD_RANGES.length; i++)
+    if (n >= CLOUD_RANGES[i][0] && n <= CLOUD_RANGES[i][1]) return true;
+  return false;
+}
 function tkMeta(ua, ref, selfHost){
   return [ (ua||"").slice(0,250), tkDevice(ua), tkSource(ref, selfHost), tkKeyword(ref) ];
 }
@@ -1430,7 +1468,7 @@ export default {
   async fetch(request, env, ctx){
     const url=new URL(request.url); const path=url.pathname;
     if(url.hostname.startsWith("www.")) return Response.redirect(ORIGIN+path+url.search,301);
-    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.get("User-Agent")||"";const ts=new Date().toISOString();if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua);if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||""))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare('INSERT INTO events (site,type,page,ref,ip,ts,ua,device,source,keyword) VALUES (?,?,?,?,?,?,?,?,?,?)')
+    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.get("User-Agent")||"";const ts=new Date().toISOString();if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua);if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||"")||(b.type==="view"&&isCloudIp(request.headers.get("CF-Connecting-IP")||"")))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare('INSERT INTO events (site,type,page,ref,ip,ts,ua,device,source,keyword) VALUES (?,?,?,?,?,?,?,?,?,?)')
             .bind('semogwa', b.type, (b.page||'').slice(0,300), (b.ref||'').slice(0,120), ip, ts, ...tkMeta(request.headers.get('User-Agent')||'', b.ref||'', 'semogwa.com')).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
     if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(request.method==="POST"&&path==="/api/inquiry") return handleInquiry(request,env);
