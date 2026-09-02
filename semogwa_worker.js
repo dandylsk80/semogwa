@@ -1323,6 +1323,13 @@ function smLastmod(key){
   const periods = Math.floor((Date.now()/SM_DAY - off)/SM_PERIOD);
   return new Date((periods*SM_PERIOD + off)*SM_DAY).toISOString().slice(0,10);
 }
+/* RSS 정렬용 날짜: URL 마다 60일 주기로 밀린다. 매일 다른 1/60 묶음이 최신이 되어
+   "최근 항목 위주"를 유지하면서 피드가 날마다 바뀐다. */
+function rssRankDate(u){
+  const off = smHash(u) % 60;
+  const periods = Math.floor((Date.now()/SM_DAY - off)/60);
+  return new Date((periods*60 + off)*SM_DAY);
+}
 /* <loc> 뒤에 lastmod 가 없으면 채워 넣는다 (loc → lastmod → changefreq → priority 순서 유지) */
 function smAddLastmod(xml){
   return String(xml).replace(/<loc>([^<]+)<\/loc>(?!<lastmod>)/g, function(m, l){
@@ -1421,10 +1428,11 @@ function rssFeed(){
   for(const r of regions) base.push({u:`/${r.slug}`,t:`${shortName(r.name)} 1:1 과외`});
   for(const r of regions){ for(const s of SUBJECTS) base.push({u:`/${r.slug}/${s.slug}`,t:`${shortName(r.name)} ${s.name} 과외`}); }
   for(const gs in GU_MAP){ for(const s of SUBJECTS) base.push({u:`/${gs}/${s.slug}`,t:`${GU_MAP[gs].sigungu} ${s.name} 과외`}); }
-  const ranked=base.map(it=>{ const d=pageDates(it.u); return {...it,d,ts:new Date(d.modISO).getTime()}; })
-    .sort((a,b)=>b.ts-a.ts).slice(0,1000);
+  /* 최근 항목 위주로 매일 회전. 1,000개는 사실상 전체라 피드 구실을 못 해 100개로 줄였다 */
+  const ranked=base.map(it=>{ const m=rssRankDate(ORIGIN+it.u); return {u:it.u,t:it.t,m:m,ts:m.getTime()}; })
+    .sort((a,b)=>b.ts-a.ts).slice(0,100);
   const items=ranked.map(it=>{
-    return `<item><title>${esc(it.t)}</title><link>${ORIGIN}${it.u}</link><guid>${ORIGIN}${it.u}</guid><pubDate>${new Date(it.d.modISO).toUTCString()}</pubDate><description>${esc(it.t)} · 방문·화상 1:1 과외 매칭. 국어·영어·수학·사회·과학.</description></item>`;
+    return `<item><title>${esc(it.t)}</title><link>${ORIGIN}${it.u}</link><guid>${ORIGIN}${it.u}</guid><pubDate>${it.m.toUTCString()}</pubDate><description>${esc(it.t)} · 방문·화상 1:1 과외 매칭. 국어·영어·수학·사회·과학.</description></item>`;
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>${SITE_NAME}</title><link>${ORIGIN}</link><description>전국 방문·화상 1:1 과외 매칭 · 국어·영어·수학·사회·과학</description><language>ko</language>${items}</channel></rss>`;
 }
