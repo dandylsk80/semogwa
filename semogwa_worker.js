@@ -102,6 +102,37 @@ function isCloudIp(ip){
     if (n >= CLOUD_RANGES[i][0] && n <= CLOUD_RANGES[i][1]) return true;
   return false;
 }
+/* ── 데이터센터 ASN · 국가 판정 (view 집계 제외용) ──────────
+   Cloudflare 가 채워주는 request.cf 로 판정한다. 기존 IP 목록(isCloudIp)은
+   그대로 두고 그 위에 얹는다.
+   request.cf 는 로컬 실행·테스트에서 undefined 이므로 "모르면 기록한다"를
+   기본값으로 둔다(모를 때 제외하면 집계가 통째로 비어버린다).
+   view 에만 적용하고 tel/sms/contact 는 어떤 경우에도 기록한다. */
+const DC_ORG_RE = /amazon|aws\b|google|microsoft|azure|oracle|tencent|alibaba|aliyun|baidu|huawei|bytedance|volcengine|ucloud|kingsoft|digitalocean|linode|vultr|choopa|\bovh\b|hetzner|contabo|scaleway|leaseweb|m247|datacamp|zenlayer|hostwinds|ionos|colo|data\s?cent|hosting|cloud|\bvps\b|\bidc\b|dedicated server/i;
+const DC_ASNS = [16509,14618,16550,8987,      /* Amazon */
+  15169,396982,19527,                          /* Google */
+  8075,8068,8069,                              /* Microsoft */
+  31898,                                       /* Oracle */
+  45090,132203,                                /* Tencent */
+  45102,37963,45103,                           /* Alibaba */
+  55990,136907,                                /* Huawei */
+  55967,38365,                                 /* Baidu */
+  14061,63949,20473,16276,24940,51167,12876,   /* DO·Linode·Vultr·OVH·Hetzner·Contabo·Scaleway */
+  60068,9009,135377,49981,29802,               /* Datacamp·M247·UCloud·WorldStream·HIVELOCITY */
+  200651,206092,62240,                         /* Flokinet·Ponynet·Clouvider */
+  35916,53667,25820];                          /* MULTA·FranTech·IT7 */
+function skipViewCf(request, ip){
+  if (isCloudIp(ip)) return true;                 /* 기존 IP 목록 (유지) */
+  const cf = request && request.cf;
+  if (!cf) return false;                          /* 판정 불가 → 기록한다 */
+  const org = String(cf.asOrganization || "");
+  if (org && DC_ORG_RE.test(org)) return true;
+  const asn = Number(cf.asn || 0);
+  if (asn && DC_ASNS.indexOf(asn) >= 0) return true;
+  const cc = String(cf.country || "");
+  if (cc && cc !== "KR") return true;             /* 국내가 아니면 방문 집계 제외 */
+  return false;
+}
 function tkMeta(ua, ref, selfHost){
   return [ (ua||"").slice(0,250), tkDevice(ua), tkSource(ref, selfHost), tkKeyword(ref) ];
 }
@@ -1468,7 +1499,7 @@ export default {
   async fetch(request, env, ctx){
     const url=new URL(request.url); const path=url.pathname;
     if(url.hostname.startsWith("www.")) return Response.redirect(ORIGIN+path+url.search,301);
-    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.get("User-Agent")||"";const ts=new Date().toISOString();if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua);if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||"")||(b.type==="view"&&isCloudIp(request.headers.get("CF-Connecting-IP")||"")))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare('INSERT INTO events (site,type,page,ref,ip,ts,ua,device,source,keyword) VALUES (?,?,?,?,?,?,?,?,?,?)')
+    if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.get("User-Agent")||"";const ts=new Date().toISOString();if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua);if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||"")||(b.type==="view"&&skipViewCf(request, request.headers.get("CF-Connecting-IP")||"")))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare('INSERT INTO events (site,type,page,ref,ip,ts,ua,device,source,keyword) VALUES (?,?,?,?,?,?,?,?,?,?)')
             .bind('semogwa', b.type, (b.page||'').slice(0,300), (b.ref||'').slice(0,120), ip, ts, ...tkMeta(request.headers.get('User-Agent')||'', b.ref||'', 'semogwa.com')).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
     if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(request.method==="POST"&&path==="/api/inquiry") return handleInquiry(request,env);
