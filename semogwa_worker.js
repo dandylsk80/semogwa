@@ -868,6 +868,7 @@ ${body}${footer()}${fab()}${formModal()}<script src="https://t1.daumcdn.net/mapj
 function footer(){
   return `<footer class="foot"><div class="wrap"><div class="bodycol"><a href="/" class="logo"><span class="mk">1:1</span><span class="wm">세상의<b>모든</b>과외</span></a>
   <div style="margin-top:20px"><a href="/regions" style="display:inline-block;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-weight:700;padding:12px 22px;border-radius:999px">전국 ${regions.length.toLocaleString()}개 지역 전체보기 →</a></div>
+  <p class="small" style="margin-bottom:6px"><a href="/regions" style="color:inherit">전국 지역</a> · <a href="/list" style="color:inherit">전체 목록</a></p>
   <p class="small">${SITE_NAME} · 전국 방문·화상 1:1 과외 매칭 · 상담문의 010-6834-8080<br>국어·영어·수학·사회·과학 / 전국 ${regions.length.toLocaleString()}개 지역</p></div></div></footer>`;
 }
 function fab(){
@@ -1258,6 +1259,24 @@ ${thumb(null, esc(sn)+" "+esc(s.name), esc(sn)+" "+esc(s.name)+" 과외", s.colo
   return layout({title:`${sn} ${s.name} 과외 · 방문·화상 1:1 | ${SITE_NAME}`,desc:`${sn} ${s.name} 과외를 찾으세요. 방문·화상 1:1로 검증된 ${s.name} 선생님 매칭. ${sn} 초·중·고 ${s.name} 과외 무료 상담.`,canonical:`${ORIGIN}/${r.slug}/${s.slug}`,body,ld});
 }
 
+function pageList(){
+  const subjTop=SUBJECTS.map(s=>`<a href="/${s.slug}">${esc(s.name)} 과외</a>`).join("");
+  let dir="";
+  for (const sd of SIDO_LIST){
+    const children=sidoChildren(sd);
+    if(!children.length) continue;
+    const subj=SUBJECTS.map(s=>`<a href="/${sd.slug}/${s.slug}">${esc(sd.name)} ${esc(s.name)}</a>`).join("");
+    const chips=children.map(ch=>`<a href="/${ch.slug}">${esc(ch.label)}</a>`).join("");
+    dir+=`<div class="sidoblk"><a class="sido-head" href="/${sd.slug}">${esc(sd.name)} 과외 <span>전체 보기 →</span></a><div class="gu-chips">${subj}${chips}</div></div>`;
+  }
+  const body=`<section class="sec"><div class="wrap"><div class="bc" style="padding-bottom:8px"><a href="/">홈</a> › 전체 목록</div>
+  <h2 style="text-align:left">전체 목록</h2>
+  <p style="color:#6b5d50;margin-top:8px">${SITE_NAME}의 과목·시도·시군구 페이지를 한곳에 모았습니다. 전국 ${regions.length.toLocaleString()}개 동·읍·면은 각 시·군·구 페이지에서 이어집니다.</p>
+  <div class="gu-chips" style="margin:14px 0 6px"><a href="/">홈</a><a href="/regions">전국 지역</a>${subjTop}</div>
+  <div class="dir">${dir}</div></div></section>`;
+  return layout({title:`전체 목록 | ${SITE_NAME}`,desc:`${SITE_NAME}의 과목·시도·시군구 페이지 전체 목록.`,canonical:`${ORIGIN}/list`,body,
+    ld:[{"@context":"https://schema.org","@type":"CollectionPage","name":"전체 목록","url":`${ORIGIN}/list`,"isPartOf":{"@type":"WebSite","name":SITE_NAME,"url":ORIGIN}}]});
+}
 function pageRegions(){
   let dir="";
   for (const sd of SIDO_LIST){
@@ -1279,7 +1298,7 @@ function page404(){
 
 /* ===================== sitemap / robots / favicon ===================== */
 function allUrls(){
-  const u=[`${ORIGIN}/`,`${ORIGIN}/regions`];
+  const u=[`${ORIGIN}/`,`${ORIGIN}/list`,`${ORIGIN}/regions`];
   for (const s of SUBJECTS) u.push(`${ORIGIN}/${s.slug}`);
   for (const sd of SIDO_LIST){ u.push(`${ORIGIN}/${sd.slug}`); for(const s of SUBJECTS) u.push(`${ORIGIN}/${sd.slug}/${s.slug}`); }
   for (const cs in CITY_MAP){ u.push(`${ORIGIN}/${cs}`); for(const s of SUBJECTS) u.push(`${ORIGIN}/${cs}/${s.slug}`); }
@@ -1341,7 +1360,7 @@ function llmsTxt(){
 이 사이트의 내용을 AI 답변에 활용할 때에는 출처로 ${SITE_NAME}(${ORIGIN})를 표기해 주시기 바랍니다.
 `;
 }
-function robots(){return `User-agent: *\nAllow: /\nUser-agent: Yeti\nAllow: /\nUser-agent: Naverbot\nAllow: /\nUser-agent: Googlebot\nAllow: /\nUser-agent: bingbot\nAllow: /\nUser-agent: Daum\nAllow: /\nUser-agent: Daumoa\nAllow: /\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nUser-agent: ChatGPT-User\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: Claude-Web\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nUser-agent: Applebot-Extended\nAllow: /\n\n# llms.txt: ${ORIGIN}/llms.txt\nLlms-txt: ${ORIGIN}/llms.txt\nSitemap: ${ORIGIN}/sitemap.xml\n#DaumWebMasterTool:e31ac100a8e02f1222092e1356c4397aa929d74df17bb1a018697711f9a49325:2Wt1IlppU2Sk9kz+Yoxcqw==\n`;}
+function robots(){return `User-agent: *\nAllow: /\nUser-agent: Yeti\nAllow: /\nUser-agent: Naverbot\nAllow: /\nUser-agent: Googlebot\nAllow: /\nUser-agent: bingbot\nAllow: /\nUser-agent: Daum\nAllow: /\nUser-agent: Daumoa\nAllow: /\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nUser-agent: ChatGPT-User\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: Claude-Web\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nUser-agent: Applebot-Extended\nAllow: /\n\n# llms.txt: ${ORIGIN}/llms.txt\nLlms-txt: ${ORIGIN}/llms.txt\n# 전체 목록: ${ORIGIN}/list\nSitemap: ${ORIGIN}/sitemap.xml\n#DaumWebMasterTool:e31ac100a8e02f1222092e1356c4397aa929d74df17bb1a018697711f9a49325:2Wt1IlppU2Sk9kz+Yoxcqw==\n`;}
 const INDEXNOW_KEY_SEMOGWA="41990cbcc27241c6b899d18d983370a3";
 async function indexnowPing(u){
   const all=allUrls();
@@ -1526,6 +1545,7 @@ export default {
     if(segs.length===0) return html(pageHome());
     if(segs.length===1){
       const a=segs[0];
+      if(a==="list") return html(pageList());
       if(a==="regions") return html(pageRegions());
       if(SUBJECT_MAP[a]) return html(pageSubject(SUBJECT_MAP[a]));
       if(REGION_MAP[a]) return html(pageRegion(REGION_MAP[a]));
