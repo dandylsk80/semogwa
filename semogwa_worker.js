@@ -913,7 +913,7 @@ try{await fetch('/api/inquiry',{method:'POST',headers:{'content-type':'applicati
 document.getElementById('formBody').innerHTML='<div style="text-align:center;padding:20px 6px"><div style="font-size:46px">✅</div><h3 style="margin-top:10px">신청이 완료되었습니다</h3><p style="color:#8a7a6d;margin-top:8px">빠른 시일 내에 연락드리겠습니다. 감사합니다.</p><button class="btn btn-o" style="width:100%;justify-content:center;margin-top:18px" onclick="resetAndClose()">닫기</button></div>';
 }catch(e){btn.textContent='상담 신청하기';btn.disabled=false;alert('전송에 실패했습니다. 다시 시도해주세요.');}}
 `;
-function html(b,s=200){return new Response(b,{status:s,headers:{"content-type":"text/html;charset=UTF-8"}});}
+function html(b,s=200){return new Response(b,{status:s,headers:{"cache-control":"public, max-age=600","content-type":"text/html;charset=UTF-8"}});}
 
 /* ===================== 페이지 ===================== */
 function pageHome(){
