@@ -1531,8 +1531,11 @@ async function tgNotify(env, type, page, ref, ua) {
   L.push((type === 'tel' ? '📞 ' : '📝 ') + label);
   L.push('');
   L.push('사이트: ' + TG_SITE + ' (' + TG_DOMAIN + ')');
-  L.push('페이지: ' + TG_ORIGIN + page);
-  L.push('검색 키워드: ' + tgDescribe(page));
+  L.push('주소: ' + TG_ORIGIN + page);
+  L.push('페이지: ' + tgDescribe(page));
+  /* ref 에서 뽑은 진짜 검색어 — 없으면 줄 자체를 넣지 않는다 */
+  const __kw = tkKeyword(ref);
+  if (__kw) L.push('검색어: ' + __kw);
   L.push('유입: ' + tgRef(ref));
   L.push('기기: ' + (/Mobile|Android|iPhone|iPad/i.test(ua || '') ? '모바일' : 'PC'));
   L.push('시각: ' + tgTime() + ' (KST)');
