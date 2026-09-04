@@ -812,6 +812,12 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .gu-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .gu-chips a{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 13px;font-size:13.5px}
 .gu-chips a:hover{border-color:var(--brand);color:var(--brand)}
+.gublk{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.gublk:first-of-type{border-top:0;padding-top:0}
+.gu-head{display:inline-block;font-size:15px;font-weight:800;color:#3a2415}
+.dong-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.dong-chips a{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12.5px;color:#6b5d50}
+.dong-chips a:hover{border-color:var(--brand);color:var(--brand)}
 .foot{background:#2c2018;color:#cdbbac;padding:40px 0;margin-top:40px;font-size:14px}
 .foot .logo{color:#fff}.foot a{color:#e9d9c8}
 .foot .cols{display:flex;flex-wrap:wrap;gap:30px;margin-top:18px}
@@ -1278,16 +1284,23 @@ function pageList(){
   return layout({title:`전체 목록 | ${SITE_NAME}`,desc:`${SITE_NAME}의 과목·시도·시군구 페이지 전체 목록.`,canonical:`${ORIGIN}/list`,body,
     ld:[{"@context":"https://schema.org","@type":"CollectionPage","name":"전체 목록","url":`${ORIGIN}/list`,"isPartOf":{"@type":"WebSite","name":SITE_NAME,"url":ORIGIN}}]});
 }
+/* 전국 동·읍·면을 시군구별로 묶어 한 페이지에 모두 노출한다.
+   홈 → /regions → 동네 로 2클릭에 닿게 해 크롤 깊이를 3에서 2로 줄인다. */
 function pageRegions(){
   let dir="";
   for (const sd of SIDO_LIST){
-    const children=sidoChildren(sd);
-    if(!children.length) continue;
-    const chips=children.map(ch=>`<a href="/${ch.slug}">${esc(ch.label)}</a>`).join("");
-    dir+=`<div class="sidoblk"><a class="sido-head" href="/${sd.slug}">${esc(sd.name)} 과외 <span>전체 보기 →</span></a><div class="gu-chips">${chips}</div></div>`;
+    const gus=(GU_OF_SIDO[sd.slug]||[]).map(gs=>GU_MAP[gs]);
+    if(!gus.length) continue;
+    let inner="";
+    for(const g of gus){
+      const dongs=DONGS_OF_GU[g.slug]||[];
+      if(!dongs.length) continue;
+      inner+=`<div class="gublk"><a class="gu-head" href="/${g.slug}">${esc(g.sigungu)} 과외</a><div class="dong-chips">${dongs.map(r=>`<a href="/${r.slug}">${esc(r.dong)}</a>`).join("")}</div></div>`;
+    }
+    dir+=`<div class="sidoblk"><a class="sido-head" href="/${sd.slug}">${esc(sd.name)} 과외 <span>전체 보기 →</span></a>${inner}</div>`;
   }
   const body=`<section class="sec"><div class="wrap"><div class="bc" style="padding-bottom:8px"><a href="/">홈</a> › 전국 지역</div>
-  <h2 style="text-align:left">전국 과외 지역</h2><p style="color:#6b5d50;margin-top:8px">전국 ${regions.length.toLocaleString()}개 동·읍·면에서 1:1 과외를 매칭합니다. 시도를 누르면 해당 지역 과외 페이지로 이동합니다.</p>
+  <h2 style="text-align:left">전국 과외 지역</h2><p style="color:#6b5d50;margin-top:8px">전국 ${regions.length.toLocaleString()}개 동·읍·면에서 1:1 과외를 매칭합니다. 동·읍·면 이름을 누르면 해당 동네 과외 페이지로 바로 이동합니다.</p>
   <div class="dir">${dir}</div></div></section>`;
   return layout({title:`전국 과외 지역 (${regions.length.toLocaleString()}개) | ${SITE_NAME}`,desc:`전국 ${regions.length.toLocaleString()}개 지역 1:1 과외 매칭. 시도·시군구·동별로 방문·화상 과외 선생님을 찾아보세요.`,canonical:`${ORIGIN}/regions`,body,ld:null});
 }
