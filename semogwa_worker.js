@@ -1646,7 +1646,7 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.ge
   // 매일 자동 실행: 하루 500개씩 IndexNow 제출 (날짜 기준으로 구간 계산)
   async scheduled(event, env, ctx){
     const all=allUrls();
-    const PER_DAY=500;
+    const PER_DAY=1000;
     const DAY0=Date.UTC(2026,7,19);            // 2026-08-19 시작
     const dayNo=Math.max(0,Math.floor((Date.now()-DAY0)/86400000));
     const cycles=Math.ceil(all.length/PER_DAY); // 전체를 다 돌면 처음부터 반복
