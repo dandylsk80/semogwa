@@ -1308,12 +1308,6 @@ function allUrls(){
   return u;
 }
 const PER=40000;
-function sitemapIndex(){
-  const n=Math.ceil(allUrls().length/PER);
-  let s=`<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-  for(let i=0;i<n;i++) s+=`<sitemap><loc>${ORIGIN}/sitemap-${i+1}.xml</loc></sitemap>\n`;
-  return s+`</sitemapindex>`;
-}
 /* ── sitemap lastmod ────────────────────────────────────────
    URL 마다 다른 날짜를 주고 18일 주기로 갱신한다.
    전 URL 을 매일 오늘로 찍으면 검색엔진이 신뢰하지 않는다(danmalgi 방식). */
@@ -1341,6 +1335,12 @@ function sitemapPart(i){
   const all=allUrls(); const sl=all.slice((i-1)*PER,i*PER);
   if(!sl.length) return null;
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sl.map(u=>`<url><loc>${u}</loc><lastmod>${smLastmod(u)}</lastmod></url>`).join("\n")}\n</urlset>`;
+}
+/* 사이트맵은 단일 urlset 으로 낸다. URL 수(5만)·용량(50MB) 한도 안이라 인덱스가 필요 없고,
+   네이버 서치어드바이저처럼 자식 사이트맵을 따로 잡아야 하는 수집기에서 누락이 생기지 않는다. */
+function sitemapAll(){
+  const all=allUrls();
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${all.map(u=>`<url><loc>${u}</loc><lastmod>${smLastmod(u)}</lastmod></url>`).join("\n")}\n</urlset>`;
 }
 function llmsTxt(){
   const guN=Object.keys(GU_MAP).length;
@@ -1601,7 +1601,7 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.ge
     if(path==="/rss.xml") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
     if(path==="/41990cbcc27241c6b899d18d983370a3.txt") return new Response("41990cbcc27241c6b899d18d983370a3",{headers:{"content-type":"text/plain;charset=UTF-8"}});
     if(path==="/indexnow-ping") return indexnowPing(url);
-    if(path==="/sitemap.xml") return new Response(sitemapIndex(),{headers:{"content-type":"application/xml;charset=UTF-8"}});
+    if(path==="/sitemap.xml") return new Response(sitemapAll(),{headers:{"content-type":"application/xml;charset=UTF-8"}});
     const sm=path.match(/^\/sitemap-(\d+)\.xml$/);
     if(sm){const p=sitemapPart(parseInt(sm[1],10)); if(p) return new Response(p,{headers:{"content-type":"application/xml;charset=UTF-8"}}); return html(page404(),404);}
 
