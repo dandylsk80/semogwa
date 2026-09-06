@@ -1593,8 +1593,29 @@ async function tgNotify(env, type, page, ref, ua, btn) {
 }
 
 /* ===================== 라우터 ===================== */
+
+/* ── 스크래퍼 차단 ──────────────────────────────────────────
+   라우팅·렌더링 전에 끊는다. 계정에 WAF 쓰기 권한이 없어 워커에서 처리한다.
+   185.218.86.11 = TC DATACENTER LIMITED (AMS 경유). 1시간에 2만 요청,
+   위장 UA Firefox/47.0, PUT 남발로 504 를 유발했다.
+   허용 메서드는 GET/POST/HEAD/OPTIONS 뿐이다. */
+const BLOCK_IPS = new Set(["185.218.86.11"]);
+const BLOCK_UA_RE = /Firefox\/47\.0\b/i;
+const ALLOWED_METHODS = new Set(["GET", "POST", "HEAD", "OPTIONS"]);
+function blockScraper(request){
+  const nostore = { "cache-control": "no-store" };
+  if(!ALLOWED_METHODS.has(request.method))
+    return new Response("Method Not Allowed", { status: 405, headers: Object.assign({ "allow": "GET, POST, HEAD, OPTIONS" }, nostore) });
+  if(BLOCK_IPS.has(request.headers.get("cf-connecting-ip") || ""))
+    return new Response("Forbidden", { status: 403, headers: nostore });
+  if(BLOCK_UA_RE.test(request.headers.get("user-agent") || ""))
+    return new Response("Forbidden", { status: 403, headers: nostore });
+  return null;
+}
+
 export default {
   async fetch(request, env, ctx){
+    const __blk = blockScraper(request); if(__blk) return __blk;
     const url=new URL(request.url); const path=url.pathname;
     if(url.hostname.startsWith("www.")) return Response.redirect(ORIGIN+path+url.search,301);
     if(path==="/api/track"&&request.method==="POST"){try{const b=await request.json();
