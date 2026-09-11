@@ -2,8 +2,23 @@ name: Deploy to Cloudflare Workers
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 jobs:
+  # 검사가 배포 앞을 막는다. 실패하면 deploy 잡이 아예 돌지 않는다.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 배포 전 검사 7개 항목
+        run: node check.mjs --sample 120
+
   deploy:
+    needs: check
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

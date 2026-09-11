@@ -149,15 +149,83 @@ function tkMeta(ua, ref, selfHost){
    엔드포인트 한 곳만 성공하면 나머지 엔진으로 전파되므로 순차 폴백한다. */
 const INDEXNOW_FALLBACK_EPS = ["https://api.indexnow.org/indexnow","https://yandex.com/indexnow","https://search.seznam.cz/indexnow"];
 async function indexnowFetch(opt){
-  let last=null;
+  /* 제출 결과를 D1 에 남기려면 "몇 번이 떴는지" 뿐 아니라 "어디가 답했는지"도
+     있어야 한다. Response 를 그대로 돌려주면 호출부가 ep 를 알 수 없어서
+     {status, ep, err} 로 바꿔 돌려준다. status 는 기존 호출부와 그대로 호환된다. */
+  let last={status:0,ep:"",err:"모든 엔드포인트 실패"};
   for(const ep of INDEXNOW_FALLBACK_EPS){
     try{
       const r=await fetch(ep,opt);
-      if(r.status>=200&&r.status<300) return r;
-      last=r;
-    }catch(e){}
+      if(r.status>=200&&r.status<300) return {status:r.status,ep,err:""};
+      last={status:r.status,ep,err:""};
+    }catch(e){ last={status:0,ep,err:String((e&&e.message)||e).slice(0,120)}; }
   }
-  return last||{status:0};
+  return last;
+}
+
+/* ═══════════════ 크롤러 방문 · IndexNow 제출 기록 ═══════════════
+   기존 집계(events)는 브라우저가 실행하는 /api/track 비컨으로만 채워진다.
+   크롤러는 JS 를 돌리지 않으므로 events 에는 영원히 한 줄도 안 남는다.
+   "네이버 Yeti 가 실제로 오긴 하는가"를 보려면 서버가 직접 적어야 한다. */
+
+/* 분류하고 싶은 봇만 이름을 붙인다. 위에서부터 먼저 맞는 것을 쓰므로
+   Googlebot 계열처럼 겹치는 패턴은 순서가 곧 우선순위다. */
+const CRAWLER_BOTS = [
+  [/yeti/i,                                  "Yeti"],        /* 네이버 */
+  [/daumoa|cs\.daum\.net|compatible;\s*daum\//i, "Daum"],
+  [/google-inspectiontool/i,                 "GoogleInspect"],
+  [/googleother/i,                           "GoogleOther"],
+  [/googlebot|mediapartners-google/i,        "Googlebot"],
+  [/bingbot|adidxbot/i,                      "bingbot"],
+  [/yandex/i,                                "YandexBot"],
+  [/petalbot/i,                              "PetalBot"],
+  [/bytespider/i,                            "Bytespider"],
+  [/applebot/i,                              "Applebot"],
+  [/gptbot|oai-searchbot|chatgpt-user/i,     "OpenAI"],
+  [/claudebot|claude-web|anthropic/i,        "ClaudeBot"],
+  [/perplexity/i,                            "PerplexityBot"],
+  [/facebookexternalhit|meta-external/i,     "Facebook"],
+];
+/* 이름 붙인 봇이 아니어도 봇이면 "기타봇" 으로 남긴다. 사람은 남기지 않는다
+   (events 와 역할이 겹치고, 양만 수백 배로 늘어난다). */
+function crawlerName(ua){
+  if(!ua) return "";
+  for(const [re,name] of CRAWLER_BOTS) if(re.test(ua)) return name;
+  return BOT_UA_RE.test(ua) ? "기타봇" : "";
+}
+
+/* 응답을 돌려준 뒤 waitUntil 로 적는다. D1 이 느리거나 실패해도
+   크롤러가 받는 응답에는 영향이 없어야 한다. */
+function logCrawl(env, ctx, request, status){
+  try{
+    if(!env||!env.DB) return;
+    const ua=request.headers.get("user-agent")||"";
+    const bot=crawlerName(ua);
+    if(!bot) return;
+    const u=new URL(request.url);
+    const cf=request.cf||{};
+    const pr=env.DB.prepare('INSERT INTO crawl_hits (site,bot,ua,host,path,status,ts,ip,asn,country) VALUES (?,?,?,?,?,?,?,?,?,?)')
+      .bind('semogwa', bot, ua.slice(0,250), u.host.slice(0,80), (u.pathname+u.search).slice(0,300),
+            status|0, new Date().toISOString(), request.headers.get("cf-connecting-ip")||"",
+            cf.asn|0, cf.country||"")
+      .run();
+    const done=Promise.resolve(pr).catch(()=>{});
+    if(ctx&&ctx.waitUntil) ctx.waitUntil(done);
+  }catch(e){}
+}
+
+/* IndexNow 제출 결과. 지금까지는 응답 코드를 받고도 버려서 "어제 정말
+   나갔는지"를 나중에 확인할 방법이 없었다. 한 줄씩 남긴다. */
+function logIndexnow(env, ctx, row){
+  try{
+    if(!env||!env.DB) return;
+    const pr=env.DB.prepare('INSERT INTO indexnow_log (site,ts,source,start_idx,count,status,endpoint,attempt,note) VALUES (?,?,?,?,?,?,?,?,?)')
+      .bind('semogwa', new Date().toISOString(), row.source||"", row.start|0, row.count|0,
+            row.status|0, (row.ep||"").slice(0,80), row.attempt|0, (row.note||"").slice(0,200))
+      .run();
+    const done=Promise.resolve(pr).catch(()=>{});
+    if(ctx&&ctx.waitUntil) ctx.waitUntil(done); else return done;
+  }catch(e){}
 }
 
 /* 대시보드 방문자 집계용 봇 UA 필터 (크롤러를 방문자로 세지 않기 위함) */
@@ -1318,9 +1386,10 @@ function allUrls(){
   for (const cs in CITY_MAP){ u.push(`${ORIGIN}/${cs}`); for(const s of SUBJECTS) u.push(`${ORIGIN}/${cs}/${s.slug}`); }
   for (const gs in GU_MAP){ u.push(`${ORIGIN}/${gs}`); for(const s of SUBJECTS) u.push(`${ORIGIN}/${gs}/${s.slug}`); }
   for (const r of regions){ u.push(`${ORIGIN}/${r.slug}`); for(const s of SUBJECTS) u.push(`${ORIGIN}/${r.slug}/${s.slug}`); }
-  return u;
+  /* 같은 슬러그가 CITY_MAP 과 GU_MAP 에 함께 들어간 지역(경기 화성시)이 있어
+     그대로 두면 사이트맵에 같은 <loc> 이 두 번 실린다. 순서는 지키고 중복만 걷어낸다. */
+  return [...new Set(u)];
 }
-const PER=40000;
 /* ── sitemap lastmod ────────────────────────────────────────
    URL 마다 다른 날짜를 주고 18일 주기로 갱신한다.
    전 URL 을 매일 오늘로 찍으면 검색엔진이 신뢰하지 않는다(danmalgi 방식). */
@@ -1343,11 +1412,6 @@ function smAddLastmod(xml){
   return String(xml).replace(/<loc>([^<]+)<\/loc>(?!<lastmod>)/g, function(m, l){
     return "<loc>" + l + "</loc><lastmod>" + smLastmod(l) + "</lastmod>";
   });
-}
-function sitemapPart(i){
-  const all=allUrls(); const sl=all.slice((i-1)*PER,i*PER);
-  if(!sl.length) return null;
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sl.map(u=>`<url><loc>${u}</loc><lastmod>${smLastmod(u)}</lastmod></url>`).join("\n")}\n</urlset>`;
 }
 /* 사이트맵은 단일 urlset 으로 낸다. URL 수(5만)·용량(50MB) 한도 안이라 인덱스가 필요 없고,
    네이버 서치어드바이저처럼 자식 사이트맵을 따로 잡아야 하는 수집기에서 누락이 생기지 않는다. */
@@ -1399,7 +1463,7 @@ function llmsTxt(){
 }
 function robots(){return `User-agent: *\nAllow: /\nUser-agent: Yeti\nAllow: /\nUser-agent: Naverbot\nAllow: /\nUser-agent: Googlebot\nAllow: /\nUser-agent: bingbot\nAllow: /\nUser-agent: Daum\nAllow: /\nUser-agent: Daumoa\nAllow: /\n\nUser-agent: GPTBot\nAllow: /\nCrawl-delay: 10\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nUser-agent: ChatGPT-User\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: Claude-Web\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nUser-agent: Applebot-Extended\nAllow: /\n\n\n# SEO 분석 크롤러 — 색인에 도움 안 되므로 차단\nUser-agent: SemrushBot\nDisallow: /\nUser-agent: AhrefsBot\nDisallow: /\nUser-agent: AhrefsSiteAudit\nDisallow: /\nUser-agent: MJ12bot\nDisallow: /\nUser-agent: DotBot\nDisallow: /\nUser-agent: DataForSeoBot\nDisallow: /\nUser-agent: BLEXBot\nDisallow: /\nUser-agent: rogerbot\nDisallow: /\nUser-agent: SEOkicks\nDisallow: /\nUser-agent: Barkrowler\nDisallow: /\nUser-agent: serpstatbot\nDisallow: /\n\n# llms.txt: ${ORIGIN}/llms.txt\nLlms-txt: ${ORIGIN}/llms.txt\n# 전체 목록: ${ORIGIN}/list\nSitemap: ${ORIGIN}/sitemap.xml\n#DaumWebMasterTool:e31ac100a8e02f1222092e1356c4397aa929d74df17bb1a018697711f9a49325:2Wt1IlppU2Sk9kz+Yoxcqw==\n`;}
 const INDEXNOW_KEY_SEMOGWA="41990cbcc27241c6b899d18d983370a3";
-async function indexnowPing(u){
+async function indexnowPing(u, env, ctx){
   const all=allUrls();
   const start=Math.max(0,parseInt((u&&u.searchParams.get("start"))||"0")||0);
   const n=Math.min(10000,Math.max(1,parseInt((u&&u.searchParams.get("n"))||"1000")||1000));
@@ -1409,8 +1473,12 @@ async function indexnowPing(u){
   try{
     const resp=await indexnowFetch({ method:"POST", headers:{"Content-Type":"application/json; charset=utf-8"}, body:JSON.stringify(payload) });
     const next=start+urls.length;
-    return new Response(`IndexNow 제출 완료\n범위: ${start} ~ ${next-1}\n제출 URL 수: ${urls.length}\n전체 URL 수: ${all.length}\n응답 코드: ${resp.status}\n다음: ${ORIGIN}/indexnow-ping?start=${next}&n=${n}`,{headers:{"content-type":"text/plain; charset=utf-8"}});
-  }catch(e){ return new Response(`IndexNow 제출 실패: ${e.message}`,{status:500,headers:{"content-type":"text/plain; charset=utf-8"}}); }
+    logIndexnow(env, ctx, { source:"manual", start, count:urls.length, status:resp.status, ep:resp.ep, attempt:1, note:resp.err||"" });
+    return new Response(`IndexNow 제출 완료\n범위: ${start} ~ ${next-1}\n제출 URL 수: ${urls.length}\n전체 URL 수: ${all.length}\n응답 코드: ${resp.status}\n응답 엔드포인트: ${resp.ep||"(없음)"}\n다음: ${ORIGIN}/indexnow-ping?key=${INDEXNOW_KEY_SEMOGWA}&start=${next}&n=${n}`,{headers:{"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}});
+  }catch(e){
+    logIndexnow(env, ctx, { source:"manual", start, count:urls.length, status:0, ep:"", attempt:1, note:String(e.message).slice(0,200) });
+    return new Response(`IndexNow 제출 실패: ${e.message}`,{status:500,headers:{"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}});
+  }
 }
 /* 기존 RSS 를 Atom 으로 변환한다 (피드 항목 로직을 중복 구현하지 않기 위함) */
 function atomFromRss(xml, selfUrl){
@@ -1613,8 +1681,9 @@ function blockScraper(request){
   return null;
 }
 
-export default {
-  async fetch(request, env, ctx){
+/* 라우팅 본체. export default.fetch 는 이 결과에 크롤러 기록만 덧붙인다.
+   경로마다 흩어진 return 을 전부 고치지 않고 한 곳에서 감싸기 위해 분리했다. */
+async function handleFetch(request, env, ctx){
     const __blk = blockScraper(request); if(__blk) return __blk;
     const url=new URL(request.url); const path=url.pathname;
     if(url.hostname.startsWith("www.")) return Response.redirect(ORIGIN+path+url.search,301);
@@ -1634,10 +1703,16 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.ge
     if(path==="/atom.xml"||path==="/atom") return new Response(atomFromRss(rssFeed(), ORIGIN+"/atom.xml"),{headers:{"content-type":"application/atom+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
     if(path==="/rss.xml") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
     if(path==="/41990cbcc27241c6b899d18d983370a3.txt") return new Response("41990cbcc27241c6b899d18d983370a3",{headers:{"content-type":"text/plain;charset=UTF-8"}});
-    if(path==="/indexnow-ping") return indexnowPing(url);
-    if(path==="/sitemap.xml") return new Response(sitemapAll(),{headers:{"content-type":"application/xml;charset=UTF-8"}});
-    const sm=path.match(/^\/sitemap-(\d+)\.xml$/);
-    if(sm){const p=sitemapPart(parseInt(sm[1],10)); if(p) return new Response(p,{headers:{"content-type":"application/xml;charset=UTF-8"}}); return html(page404(),404);}
+    /* 키 없이 열려 있으면 누구나 전체 URL 제출을 반복시킬 수 있다. 키를 요구한다. */
+    if(path==="/indexnow-ping"){
+      if(url.searchParams.get("key")!==INDEXNOW_KEY_SEMOGWA)
+        return new Response("Forbidden",{status:403,headers:{"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}});
+      return indexnowPing(url, env, ctx);
+    }
+    if(path==="/sitemap.xml") return new Response(sitemapAll(),{headers:{"content-type":"application/xml;charset=UTF-8","cache-control":"public, max-age=3600"}});
+    /* 분할 사이트맵은 없앴다. 다만 404 로 끊으면 서치어드바이저·서치콘솔에
+       이미 등록돼 있던 주소가 오류로 남으므로 본 사이트맵으로 넘긴다. */
+    if(/^\/sitemap-(\d+)\.xml$/.test(path)) return Response.redirect(ORIGIN+"/sitemap.xml",301);
 
     const segs=path.split("/").filter(Boolean);
     if(segs.length===0) return html(pageHome());
@@ -1662,9 +1737,16 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.ge
       return html(page404(),404);
     }
     return html(page404(),404);
+}
+
+export default {
+  async fetch(request, env, ctx){
+    const res = await handleFetch(request, env, ctx);
+    logCrawl(env, ctx, request, res.status);      /* 실패해도 응답에는 영향 없음 */
+    return res;
   },
 
-  // 매일 자동 실행: 하루 500개씩 IndexNow 제출 (날짜 기준으로 구간 계산)
+  // 매일 자동 실행: 하루 1,000개씩 IndexNow 제출 (날짜 기준으로 구간 계산)
   async scheduled(event, env, ctx){
     const all=allUrls();
     const PER_DAY=1000;
@@ -1675,15 +1757,21 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.ge
     let batch=all.slice(start,start+PER_DAY);
     if(!batch.length) return;
 
-    // 429가 나면 절반으로 줄여 재시도 (최대 4회)
-    for(let attempt=0; attempt<4; attempt++){
+    // 429가 나면 절반으로 줄여 재시도 (최대 4회). 시도마다 결과를 남긴다.
+    for(let attempt=1; attempt<=4; attempt++){
       const payload={ host:new URL(ORIGIN).host, key:INDEXNOW_KEY_SEMOGWA, keyLocation:`${ORIGIN}/${INDEXNOW_KEY_SEMOGWA}.txt`, urlList:batch };
       try{
         const resp=await indexnowFetch({ method:"POST", headers:{"Content-Type":"application/json; charset=utf-8"}, body:JSON.stringify(payload) });
+        logIndexnow(env, ctx, { source:"cron", start, count:batch.length, status:resp.status, ep:resp.ep, attempt, note:resp.err||"" });
         if(resp.status!==429) return;           // 성공이든 다른 오류든 종료
-      }catch(e){ return; }
+      }catch(e){
+        logIndexnow(env, ctx, { source:"cron", start, count:batch.length, status:0, ep:"", attempt, note:String(e.message).slice(0,200) });
+        return;
+      }
       batch=batch.slice(0,Math.max(100,Math.floor(batch.length/2)));
       await new Promise(r=>setTimeout(r,3000));
     }
+    /* 4회 모두 429 로 끝난 경우 — 그날 제출이 통째로 날아갔다는 뜻이라 따로 남긴다. */
+    logIndexnow(env, ctx, { source:"cron", start, count:0, status:429, ep:"", attempt:5, note:"4회 재시도 모두 429 — 제출 실패" });
   }
 };
