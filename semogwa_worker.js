@@ -1476,7 +1476,7 @@ async function indexnowPing(u, env, ctx){
     const resp=await indexnowFetch({ method:"POST", headers:{"Content-Type":"application/json; charset=utf-8"}, body:JSON.stringify(payload) });
     const next=start+urls.length;
     logIndexnow(env, ctx, { source:"manual", start, count:urls.length, status:resp.status, ep:resp.ep, attempt:1, note:resp.err||"" });
-    return new Response(`IndexNow 제출 완료\n범위: ${start} ~ ${next-1}\n제출 URL 수: ${urls.length}\n전체 URL 수: ${all.length}\n응답 코드: ${resp.status}\n응답 엔드포인트: ${resp.ep||"(없음)"}\n다음: ${ORIGIN}/indexnow-ping?key=${INDEXNOW_KEY_SEMOGWA}&start=${next}&n=${n}`,{headers:{"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}});
+    return new Response(`IndexNow 제출 완료\n범위: ${start} ~ ${next-1}\n제출 URL 수: ${urls.length}\n전체 URL 수: ${all.length}\n응답 코드: ${resp.status}\n응답 엔드포인트: ${resp.ep||"(없음)"}\n다음: ${ORIGIN}/indexnow-ping?key=${(env&&env.INDEXNOW_PING_KEY)||"<INDEXNOW_PING_KEY>"}&start=${next}&n=${n}`,{headers:{"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}});
   }catch(e){
     logIndexnow(env, ctx, { source:"manual", start, count:urls.length, status:0, ep:"", attempt:1, note:String(e.message).slice(0,200) });
     return new Response(`IndexNow 제출 실패: ${e.message}`,{status:500,headers:{"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}});
@@ -1705,9 +1705,12 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.ge
     if(path==="/atom.xml"||path==="/atom") return new Response(atomFromRss(rssFeed(), ORIGIN+"/atom.xml"),{headers:{"content-type":"application/atom+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
     if(path==="/rss.xml") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
     if(path==="/41990cbcc27241c6b899d18d983370a3.txt") return new Response("41990cbcc27241c6b899d18d983370a3",{headers:{"content-type":"text/plain;charset=UTF-8"}});
-    /* 키 없이 열려 있으면 누구나 전체 URL 제출을 반복시킬 수 있다. 키를 요구한다. */
+    /* 키 없이 열려 있으면 누구나 전체 URL 제출을 반복시킬 수 있다.
+       IndexNow 키(INDEXNOW_KEY_SEMOGWA)는 /<key>.txt 로 공개 제공하는 값이라
+       문지기로 쓸 수 없다. 별도 시크릿을 쓰고, 시크릿이 없으면 닫는다. */
     if(path==="/indexnow-ping"){
-      if(url.searchParams.get("key")!==INDEXNOW_KEY_SEMOGWA)
+      const want=(env&&env.INDEXNOW_PING_KEY)||"";
+      if(!want||url.searchParams.get("key")!==want)
         return new Response("Forbidden",{status:403,headers:{"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}});
       return indexnowPing(url, env, ctx);
     }

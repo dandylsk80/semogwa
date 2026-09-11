@@ -83,7 +83,8 @@ globalThis.fetch = async (u, opt) => {
 
 /* ── 워커 호출 ───────────────────────────────────────────────── */
 let waits = [];
-const ENV = { DB };
+const PING_KEY = "test-ping-key-0123456789";      /* 게이트 검사용 가짜 시크릿 */
+const ENV = { DB, INDEXNOW_PING_KEY: PING_KEY };
 const CTX = { waitUntil(p) { waits.push(Promise.resolve(p).catch(() => {})); } };
 const settle = async () => { await Promise.all(waits); waits = []; };
 const GET = async (p, init = {}) => {
@@ -258,9 +259,9 @@ if (wanted("크롤러기록") && worker) {
     rd ? `→ ${rd.args[3]} ${rd.args[5]}` : "기록 없음");
   /* 키가 로그 테이블에 평문으로 박히면 안 된다 */
   fresh();
-  await GET(`/indexnow-ping?key=${INDEXNOW_KEY}&n=1`, { ua: "Mozilla/5.0 (compatible; Yeti/1.1)" });
+  await GET(`/indexnow-ping?key=${PING_KEY}&n=1`, { ua: "Mozilla/5.0 (compatible; Yeti/1.1)" });
   const kr = insertsTo("crawl_hits")[0];
-  check(kr && !kr.args[4].includes(INDEXNOW_KEY) && kr.args[4].includes("key=***"),
+  check(kr && !kr.args[4].includes(PING_KEY) && kr.args[4].includes("key=***"),
     "기록된 경로에서 key 마스킹", kr && kr.args[4]);
 
   /* sitemap.xml 요청이 잡혀야 "네이버가 사이트맵을 읽는지"를 답할 수 있다 */
@@ -281,14 +282,24 @@ if (wanted("IndexNow") && worker) {
   group("IndexNow", "5. IndexNow");
   /* 키 없이 열려 있으면 아무나 4만 URL 제출을 반복시킬 수 있다 */
   fresh();
-  for (const p of ["/indexnow-ping", "/indexnow-ping?n=1", "/indexnow-ping?key=틀린키&n=1"]) {
+  for (const p of [
+    "/indexnow-ping",
+    "/indexnow-ping?n=1",
+    "/indexnow-ping?key=틀린키&n=1",
+    `/indexnow-ping?key=${INDEXNOW_KEY}&n=1`,   /* 공개된 IndexNow 키로는 못 연다 */
+  ]) {
     const r = await GET(p);
-    check(r.status === 403, "키 없이 403", `${p} → ${r.status}`);
+    check(r.status === 403, "잘못된 키로 403", `${p} → ${r.status}`);
   }
   check(indexnowPosts.length === 0, "키 없는 요청은 제출도 하지 않음", `→ ${indexnowPosts.length}건`);
+  /* 시크릿이 안 걸린 환경에서는 열리지 말고 닫혀야 한다 (fail closed) */
+  const noSecret = await worker.fetch(
+    new Request(`${ORIGIN}/indexnow-ping?key=${PING_KEY}&n=1`), { DB }, CTX);
+  check(noSecret.status === 403, "시크릿 미설정이면 403 (fail closed)", `→ ${noSecret.status}`);
+  check(indexnowPosts.length === 0, "시크릿 미설정이면 제출도 없음", `→ ${indexnowPosts.length}건`);
 
   fresh();
-  const { r, t } = await body(`/indexnow-ping?key=${INDEXNOW_KEY}&start=0&n=3`);
+  const { r, t } = await body(`/indexnow-ping?key=${PING_KEY}&start=0&n=3`);
   check(r.status === 200, "올바른 키로 200", `→ ${r.status}`);
   check(indexnowPosts.length === 1 && indexnowPosts[0].body.urlList.length === 3,
     "요청한 만큼만 제출", `→ ${indexnowPosts.length}회 / ${indexnowPosts[0]?.body.urlList.length}건`);
