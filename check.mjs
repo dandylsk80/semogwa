@@ -256,6 +256,13 @@ if (wanted("크롤러기록") && worker) {
   const rd = insertsTo("crawl_hits")[0];
   check(rd && rd.args[5] === 301 && rd.args[3] === "www.semogwa.com", "www 301 도 host 와 함께 기록",
     rd ? `→ ${rd.args[3]} ${rd.args[5]}` : "기록 없음");
+  /* 키가 로그 테이블에 평문으로 박히면 안 된다 */
+  fresh();
+  await GET(`/indexnow-ping?key=${INDEXNOW_KEY}&n=1`, { ua: "Mozilla/5.0 (compatible; Yeti/1.1)" });
+  const kr = insertsTo("crawl_hits")[0];
+  check(kr && !kr.args[4].includes(INDEXNOW_KEY) && kr.args[4].includes("key=***"),
+    "기록된 경로에서 key 마스킹", kr && kr.args[4]);
+
   /* sitemap.xml 요청이 잡혀야 "네이버가 사이트맵을 읽는지"를 답할 수 있다 */
   fresh();
   await GET("/sitemap.xml", { ua: "Mozilla/5.0 (compatible; Yeti/1.1; +http://naver.me/spd)" });

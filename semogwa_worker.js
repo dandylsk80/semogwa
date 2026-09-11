@@ -203,9 +203,11 @@ function logCrawl(env, ctx, request, status){
     const bot=crawlerName(ua);
     if(!bot) return;
     const u=new URL(request.url);
+    /* 경로를 쿼리째 남기면 /indexnow-ping?key=... 의 키가 로그 테이블에 그대로 박힌다. */
+    const q=(u.pathname+u.search).replace(/([?&]key=)[^&]*/gi,"$1***");
     const cf=request.cf||{};
     const pr=env.DB.prepare('INSERT INTO crawl_hits (site,bot,ua,host,path,status,ts,ip,asn,country) VALUES (?,?,?,?,?,?,?,?,?,?)')
-      .bind('semogwa', bot, ua.slice(0,250), u.host.slice(0,80), (u.pathname+u.search).slice(0,300),
+      .bind('semogwa', bot, ua.slice(0,250), u.host.slice(0,80), q.slice(0,300),
             status|0, new Date().toISOString(), request.headers.get("cf-connecting-ip")||"",
             cf.asn|0, cf.country||"")
       .run();
