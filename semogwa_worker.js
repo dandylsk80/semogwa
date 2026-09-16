@@ -43,7 +43,37 @@ function tkDevice(ua){
   if(/mobile|iphone|ipod|android|blackberry|iemobile|opera mini|webos/i.test(ua)) return "mobile";
   return "pc";
 }
-function tkSource(ref, selfHost){
+/* ===== 생성형 AI 유입 판별 =====
+   ref(리퍼러 호스트) 또는 utm_source/ref 쿼리값에 AI 서비스가 있으면
+   source 를 'ai' 로, 세부 서비스명은 keyword 자리에 넣는다. */
+const AI_SRC = [
+  ["chatgpt", "ChatGPT"], ["openai", "ChatGPT"],
+  ["perplexity", "Perplexity"], ["gemini", "Gemini"],
+  ["claude.ai", "Claude"], ["claude", "Claude"],
+  ["copilot", "Copilot"]
+];
+function aiName(v){
+  if(!v) return "";
+  v = String(v).toLowerCase();
+  for(var i=0;i<AI_SRC.length;i++){ if(v.indexOf(AI_SRC[i][0]) >= 0) return AI_SRC[i][1]; }
+  return "";
+}
+/* qs 는 랜딩 URL 의 쿼리스트링(location.search). 비콘이 함께 보낸다. */
+function tkAi(ref, qs){
+  if(qs){
+    try{
+      var p = new URLSearchParams(String(qs));
+      var n = aiName(p.get("utm_source") || "") || aiName(p.get("ref") || "");
+      if(n) return n;
+    }catch(e){}
+  }
+  if(ref){
+    try{ return aiName(new URL(ref).hostname); }catch(e){}
+  }
+  return "";
+}
+function tkSource(ref, selfHost, qs){
+  if(tkAi(ref, qs)) return "ai";
   if(!ref) return "direct";
   var h = "";
   try{ h = new URL(ref).hostname.toLowerCase(); }catch(e){ return "etc"; }
@@ -54,7 +84,9 @@ function tkSource(ref, selfHost){
   if(h.indexOf("daum") >= 0 || h.indexOf("kakao") >= 0) return "daum";
   return "etc";
 }
-function tkKeyword(ref){
+function tkKeyword(ref, qs){
+  var __ai = tkAi(ref, qs);
+  if(__ai) return __ai;
   if(!ref) return "";
   try{
     var p = new URL(ref).searchParams;
@@ -140,8 +172,8 @@ function skipViewCf(request, ip){
   if (cc && cc !== "KR") return true;             /* 국내가 아니면 방문 집계 제외 */
   return false;
 }
-function tkMeta(ua, ref, selfHost){
-  return [ (ua||"").slice(0,250), tkDevice(ua), tkSource(ref, selfHost), tkKeyword(ref) ];
+function tkMeta(ua, ref, selfHost, qs){
+  return [ (ua||"").slice(0,250), tkDevice(ua), tkSource(ref, selfHost, qs), tkKeyword(ref, qs) ];
 }
 
 /* IndexNow 폴백: api.indexnow.org / www.bing.com 은 Cloudflare Workers 의 공용
@@ -939,7 +971,7 @@ function layout({title,desc,canonical,body,ld,image}){
 </head><body>
 <nav class="nav"><div class="wrap nav-in"><a href="/" class="logo"><span class="mk">1:1</span><span class="wm">세상의<b>모든</b>과외</span></a>
 <button class="nav-cta" onclick="openForm()">무료 상담 신청</button></div></nav>
-${body}${footer()}${fab()}${formModal()}<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script><script>${JS}</script><script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script></body></html>`;
+${body}${footer()}${fab()}${formModal()}<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script><script>${JS}</script><script>(function(){var U="/api/track",S={},W=30000;function K(ty){return "tk_"+ty+"_"+location.pathname;}function seen(ty){var k=K(ty),n=Date.now();if(S[k]&&n-S[k]<W)return 1;try{var v=sessionStorage.getItem(k);if(v&&n-(+v)<W)return 1;}catch(e){}return 0;}function mark(ty){var k=K(ty),n=Date.now();S[k]=n;try{sessionStorage.setItem(k,""+n);}catch(e){}}function t(ty,b){try{var d=JSON.stringify({type:ty,page:location.pathname,ref:document.referrer,q:location.search,b:b||""}),ok=false;if(navigator.sendBeacon){try{ok=navigator.sendBeacon(U,new Blob([d],{type:"application/json"}));}catch(e){}}if(!ok){try{fetch(U,{method:"POST",headers:{"Content-Type":"application/json"},body:d,keepalive:true}).catch(function(){});}catch(e){}}}catch(e){}}function c(ty,b){if(seen(ty))return;mark(ty);t(ty,b);}function L(a){try{var s=(a.getAttribute&&a.getAttribute("aria-label"))||a.textContent||"";var o="",sp=0,i,ch;for(i=0;i<s.length;i++){ch=s.charCodeAt(i);if(ch===32||ch===9||ch===10||ch===13){if(!sp){o+=" ";sp=1;}}else{o+=s.charAt(i);sp=0;}}return o.trim().slice(0,40);}catch(e){return "";}}function WV(v){try{if(navigator.userAgent.indexOf("; wv)")<0)return;var i=v.indexOf(":");if(i<0)return;var sch=v.slice(0,i),num="",j,ch;if(sch!=="tel"&&sch!=="sms")return;for(j=i+1;j<v.length;j++){ch=v.charCodeAt(j);if(ch>=48&&ch<=57)num+=v.charAt(j);}if(!num)return;var sc=sch==="tel"?"tel":"smsto",ac=sch==="tel"?"DIAL":"SENDTO",done=0;var f=function(){done=1;};document.addEventListener("visibilitychange",f,{once:true});window.addEventListener("pagehide",f,{once:true});setTimeout(function(){if(done||document.visibilityState!=="visible")return;location.href="intent://"+num+"#Intent;scheme="+sc+";action=android.intent.action."+ac+";end";},800);}catch(e){}}function h(e,early){var a=e.target&&e.target.closest&&e.target.closest("a,button,[data-tk]");if(!a)return;var k=(a.getAttribute&&a.getAttribute("data-tk"))||"",v=(a.getAttribute&&a.getAttribute("href"))||"";if(!k&&!v&&a.closest){var p=a.closest("a[href]");if(p){a=p;v=p.getAttribute("href")||"";}}if(k==="tel"||v.indexOf("tel:")===0){c("tel",L(a));if(!early)WV(v);}else if(k==="sms"||v.indexOf("sms:")===0){c("sms",L(a));if(!early)WV(v);}else if(!early&&k==="contact")c("contact",L(a));}document.addEventListener("pointerdown",function(e){h(e,1);},true);document.addEventListener("click",function(e){h(e,0);},true);if(location.pathname.indexOf("/api/")!==0)t("view");})();</script></body></html>`;
 }
 function footer(){
   return `<footer class="foot"><div class="wrap"><div class="bodycol"><a href="/" class="logo"><span class="mk">1:1</span><span class="wm">세상의<b>모든</b>과외</span></a>
@@ -986,7 +1018,7 @@ if(!addr){alert('지역(주소)을 검색해주세요.');return;}
 if(!d.subject){alert('과목을 선택해주세요.');return;}
 btn.textContent='신청 중...';btn.disabled=true;
 try{await fetch('/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(d)});
-try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({type:'contact',page:location.pathname,ref:document.referrer,b:'상담 신청 접수'})],{type:'application/json'}));}catch(e){}
+try{navigator.sendBeacon('/api/track',new Blob([JSON.stringify({type:'contact',page:location.pathname,ref:document.referrer,q:location.search,b:'상담 신청 접수'})],{type:'application/json'}));}catch(e){}
 document.getElementById('formBody').innerHTML='<div style="text-align:center;padding:20px 6px"><div style="font-size:46px">✅</div><h3 style="margin-top:10px">신청이 완료되었습니다</h3><p style="color:#8a7a6d;margin-top:8px">빠른 시일 내에 연락드리겠습니다. 감사합니다.</p><button class="btn btn-o" style="width:100%;justify-content:center;margin-top:18px" onclick="resetAndClose()">닫기</button></div>';
 }catch(e){btn.textContent='상담 신청하기';btn.disabled=false;alert('전송에 실패했습니다. 다시 시도해주세요.');}}
 `;
@@ -1623,7 +1655,7 @@ async function tkDup(env, site, type, page, ip) {
   } catch (e) { return false; }
 }
 
-async function tgNotify(env, type, page, ref, ua, btn) {
+async function tgNotify(env, type, page, ref, ua, btn,qs) {
   const TG_TOKEN = env && env.TG_TOKEN;
   const TG_CHAT = env && env.TG_CHAT;
   if (!TG_TOKEN || !TG_CHAT) return;
@@ -1638,9 +1670,10 @@ async function tgNotify(env, type, page, ref, ua, btn) {
   /* 라벨이 '상담' 인데 실제로는 sms:/tel: 링크인 버튼이 있어 눌린 버튼 이름을 그대로 싣는다 */
   if (btn) L.push('버튼: ' + btn);
   /* ref 에서 뽑은 진짜 검색어 — 없으면 줄 자체를 넣지 않는다 */
-  const __kw = tkKeyword(ref);
+  const __ai = tkAi(ref, qs);
+  const __kw = __ai ? '' : tkKeyword(ref);
   if (__kw) L.push('검색어: ' + __kw);
-  L.push('유입: ' + tgRef(ref));
+  L.push('유입: ' + (__ai ? 'AI · ' + __ai : tgRef(ref)));
   L.push('기기: ' + (/Mobile|Android|iPhone|iPad/i.test(ua || '') ? '모바일' : 'PC'));
   L.push('시각: ' + tgTime() + ' (KST)');
   {
@@ -1694,8 +1727,8 @@ async function handleFetch(request, env, ctx){
     if (await tkDup(env, 'semogwa', b.type, (b.page || '').slice(0, 300), request.headers.get('CF-Connecting-IP') || '')) {
       return new Response(JSON.stringify({ ok: true, dup: 1 }), { headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' } });
     }
-const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.get("User-Agent")||"";const ts=new Date().toISOString();if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua, String(b.b || "").slice(0, 40));if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||"")||(b.type==="view"&&skipViewCf(request, request.headers.get("CF-Connecting-IP")||"")))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare('INSERT INTO events (site,type,page,ref,ip,ts,ua,device,source,keyword) VALUES (?,?,?,?,?,?,?,?,?,?)')
-            .bind('semogwa', b.type, (b.page||'').slice(0,300), (b.ref||'').slice(0,120), ip, ts, ...tkMeta(request.headers.get('User-Agent')||'', b.ref||'', 'semogwa.com')).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
+const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.get("User-Agent")||"";const ts=new Date().toISOString();if(!TG_BOT_RE.test(ua)&&TG_LABEL[b.type]){const tgp=tgNotify(env, b.type,(b.page||"/").slice(0,300),b.ref||"",ua, String(b.b || "").slice(0, 40), b.q||"");if(ctx&&ctx.waitUntil)ctx.waitUntil(tgp);else await tgp;}if(env&&env.DB&&!(b.type==="view"&&BOT_UA_RE.test(request.headers.get("User-Agent")||"")||(b.type==="view"&&skipViewCf(request, request.headers.get("CF-Connecting-IP")||"")))&&(b.type==="tel"||b.type==="sms"||b.type==="contact"||b.type==="view")){await env.DB.prepare('INSERT INTO events (site,type,page,ref,ip,ts,ua,device,source,keyword) VALUES (?,?,?,?,?,?,?,?,?,?)')
+            .bind('semogwa', b.type, (b.page||'').slice(0,300), (b.ref||'').slice(0,120), ip, ts, ...tkMeta(request.headers.get('User-Agent')||'', b.ref||'', 'semogwa.com', b.q||"")).run();}}catch(e){}return new Response(JSON.stringify({ok:true}),{headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});}
     if(path==="/api/track"&&request.method==="OPTIONS")return new Response(null,{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type"}});
     if(request.method==="POST"&&path==="/api/inquiry") return handleInquiry(request,env);
     if(path==="/og.svg") return new Response(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2B1206"/><stop offset="1" stop-color="#E0480A"/></linearGradient></defs><rect width="1200" height="630" fill="url(#g)"/><rect x="60" y="60" width="1080" height="510" rx="28" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2"/><text x="600" y="300" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="86" font-weight="800" fill="#ffffff">세상의모든과외</text><text x="600" y="378" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="34" font-weight="500" fill="rgba(255,255,255,.88)">전국 방문·화상 1:1 과외 매칭</text><text x="600" y="530" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="28" font-weight="600" fill="rgba(255,255,255,.72)">semogwa.com</text></svg>`,{headers:{"content-type":"image/svg+xml; charset=UTF-8","cache-control":"public, max-age=86400"}});
