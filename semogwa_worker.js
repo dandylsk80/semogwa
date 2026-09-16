@@ -1406,6 +1406,59 @@ function pageRegions(){
   <div class="dir">${dir}</div></div></section>`;
   return layout({title:`전국 과외 지역 (${regions.length.toLocaleString()}개) | ${SITE_NAME}`,desc:`전국 ${regions.length.toLocaleString()}개 지역 1:1 과외 매칭. 시도·시군구·동별로 방문·화상 과외 선생님을 찾아보세요.`,canonical:`${ORIGIN}/regions`,body,ld:null});
 }
+/* ===================== 정보성 글 (/post) =====================
+   글은 공용 D1 posts 테이블에 있고 이 사이트는 자기 글만 읽는다.
+   목록은 메모리에 5분 캐시한다 — 사이트맵·RSS·목록이 매 요청 D1 을 치면
+   응답이 느려지고 D1 읽기도 낭비된다. 본문은 상세 요청에서만 읽는다. */
+const POST_TTL = 300000;
+let POSTS_CACHE = { at: 0, rows: [] };
+async function loadPosts(env){
+  if (Date.now() - POSTS_CACHE.at < POST_TTL) return POSTS_CACHE.rows;
+  if (!env || !env.DB) return POSTS_CACHE.rows;
+  try{
+    const r = await env.DB.prepare(
+      "SELECT slug,title,summary,published_at FROM posts WHERE site='semogwa' AND status='published' ORDER BY published_at DESC LIMIT 200").all();
+    POSTS_CACHE = { at: Date.now(), rows: r.results || [] };
+  }catch(e){ POSTS_CACHE = { at: Date.now(), rows: POSTS_CACHE.rows }; }
+  return POSTS_CACHE.rows;
+}
+async function getPost(env, slug){
+  if (!env || !env.DB) return null;
+  try{
+    return await env.DB.prepare(
+      "SELECT slug,title,summary,body_html,published_at FROM posts WHERE site='semogwa' AND slug=? AND status='published'").bind(slug).first();
+  }catch(e){ return null; }
+}
+const postDate = (p) => String(p && p.published_at || "").slice(0,10);
+function pagePostList(posts){
+  const items = posts.length
+    ? posts.map(p=>`<div class="sidoblk"><a class="sido-head" href="/post/${esc(p.slug)}/">${esc(p.title)} <span>읽기 →</span></a>`
+      + `<p style="color:#6b5d50;margin:8px 0 0">${esc(p.summary||"")}</p>`
+      + `<p class="small" style="color:#9a8b7d;margin-top:6px">${esc(postDate(p))}</p></div>`).join("")
+    : `<p style="color:#6b5d50">아직 등록된 글이 없습니다.</p>`;
+  const body=`<section class="sec"><div class="wrap"><div class="bc" style="padding-bottom:8px"><a href="/">홈</a> › 과외 정보</div>
+  <h2 style="text-align:left">과외 정보</h2>
+  <p style="color:#6b5d50;margin-top:8px">과외를 고르고 준비하는 데 도움이 되는 글을 매주 한 편씩 올립니다.</p>
+  <div class="dir">${items}</div></div></section>`;
+  return layout({title:`과외 정보 | ${SITE_NAME}`,desc:`과외를 고르고 준비하는 데 필요한 정보를 정리했습니다. ${SITE_NAME}가 매주 한 편씩 올리는 과외 준비 가이드입니다.`,
+    canonical:`${ORIGIN}/post/`,body,
+    ld:[{"@context":"https://schema.org","@type":"CollectionPage","name":"과외 정보","url":`${ORIGIN}/post/`,"isPartOf":{"@type":"WebSite","name":SITE_NAME,"url":ORIGIN}}]});
+}
+function pagePost(p){
+  const url=`${ORIGIN}/post/${p.slug}/`;
+  const d=postDate(p);
+  const body=`<section class="sec"><div class="wrap"><div class="bc" style="padding-bottom:8px"><a href="/">홈</a> › <a href="/post/">과외 정보</a> › ${esc(p.title)}</div>
+  <h1 style="text-align:left;font-size:26px;line-height:1.35">${esc(p.title)}</h1>
+  <p class="small" style="color:#9a8b7d;margin-top:6px">${esc(d)}</p>
+  <div class="dir" style="margin-top:18px">${p.body_html}</div>
+  <div class="gu-chips" style="margin-top:22px"><a href="/post/">과외 정보 전체</a><a href="/regions">전국 지역</a><a href="/list">전체 목록</a></div>
+  </div></section>`;
+  return layout({title:`${p.title} | ${SITE_NAME}`,desc:(p.summary||p.title),canonical:url,body,
+    ld:[{"@context":"https://schema.org","@type":"BlogPosting","headline":p.title,"url":url,
+         "datePublished":p.published_at||undefined,"dateModified":p.published_at||undefined,
+         "author":{"@type":"Organization","name":SITE_NAME},
+         "publisher":{"@type":"Organization","name":SITE_NAME,"logo":{"@type":"ImageObject","url":ORIGIN+"/favicon.svg"}}}]});
+}
 function page404(){
   const body=`<section class="hero"><div class="wrap"><h1>페이지를 찾을 수 없어요</h1><p class="sub">주소를 다시 확인해 주세요.</p>
   <div class="hero-cta"><a class="btn btn-p" href="/">홈으로</a><a class="btn btn-o" href="/regions">지역 찾기</a></div></div></section>`;
@@ -1449,9 +1502,14 @@ function smAddLastmod(xml){
 }
 /* 사이트맵은 단일 urlset 으로 낸다. URL 수(5만)·용량(50MB) 한도 안이라 인덱스가 필요 없고,
    네이버 서치어드바이저처럼 자식 사이트맵을 따로 잡아야 하는 수집기에서 누락이 생기지 않는다. */
-function sitemapAll(){
+function sitemapAll(posts){
   const all=allUrls();
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${all.map(u=>`<url><loc>${u}</loc><lastmod>${smLastmod(u)}</lastmod></url>`).join("\n")}\n</urlset>`;
+  /* 글은 실제 발행일을 lastmod 로 쓴다(지역 페이지처럼 해시로 돌리지 않는다).
+     목록 페이지도 함께 싣는다. */
+  const ps=(posts&&posts.length)?posts:[];
+  const extra=[`<url><loc>${ORIGIN}/post/</loc><lastmod>${ps.length?postDate(ps[0]):smLastmod(ORIGIN+"/post/")}</lastmod></url>`]
+    .concat(ps.map(p=>`<url><loc>${ORIGIN}/post/${p.slug}/</loc><lastmod>${postDate(p)||smLastmod(p.slug)}</lastmod></url>`));
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${extra.concat(all.map(u=>`<url><loc>${u}</loc><lastmod>${smLastmod(u)}</lastmod></url>`)).join("\n")}\n</urlset>`;
 }
 function llmsTxt(){
   const guN=Object.keys(GU_MAP).length;
@@ -1536,7 +1594,7 @@ function atomFromRss(xml, selfUrl){
   }
   return x+"</feed>";
 }
-function rssFeed(){
+function rssFeed(posts){
   const base=[];
   for(const sd of SIDO_LIST) base.push({u:`/${sd.slug}`,t:`${sd.name} 1:1 과외`});
   for(const cs in CITY_MAP) base.push({u:`/${cs}`,t:`${CITY_MAP[cs].city} 1:1 과외`});
@@ -1547,7 +1605,12 @@ function rssFeed(){
   /* 최근 항목 위주로 매일 회전. 1,000개는 사실상 전체라 피드 구실을 못 해 100개로 줄였다 */
   const ranked=base.map(it=>{ const m=rssRankDate(ORIGIN+it.u); return {u:it.u,t:it.t,m:m,ts:m.getTime()}; })
     .sort((a,b)=>b.ts-a.ts).slice(0,100);
-  const items=ranked.map(it=>{
+  /* 실제로 새로 쓴 글이므로 회전 항목보다 앞에 둔다 */
+  const postItems=(posts||[]).map(p=>{
+    const dt=p.published_at?new Date(p.published_at):new Date();
+    return `<item><title>${esc(p.title)}</title><link>${ORIGIN}/post/${esc(p.slug)}/</link><guid>${ORIGIN}/post/${esc(p.slug)}/</guid><pubDate>${dt.toUTCString()}</pubDate><description>${esc(p.summary||p.title)}</description></item>`;
+  }).join("");
+  const items=postItems+ranked.map(it=>{
     return `<item><title>${esc(it.t)}</title><link>${ORIGIN}${it.u}</link><guid>${ORIGIN}${it.u}</guid><pubDate>${it.m.toUTCString()}</pubDate><description>${esc(it.t)} · 방문·화상 1:1 과외 매칭. 국어·영어·수학·사회·과학.</description></item>`;
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>${SITE_NAME}</title><link>${ORIGIN}</link><description>전국 방문·화상 1:1 과외 매칭 · 국어·영어·수학·사회·과학</description><language>ko</language>${items}</channel></rss>`;
@@ -1735,8 +1798,8 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.ge
     if(path==="/favicon.svg"||path==="/favicon.ico") return new Response(SVG_FAVICON,{headers:{"content-type":"image/svg+xml","cache-control":"public, max-age=604800"}});
     if(path==="/robots.txt") return new Response(robots(),{headers:{"content-type":"text/plain;charset=UTF-8"}});
     if(path==="/llms.txt"||path==="/llms-full.txt") return new Response(llmsTxt(),{headers:{"content-type":"text/plain;charset=UTF-8","cache-control":"public, max-age=86400"}});
-    if(path==="/atom.xml"||path==="/atom") return new Response(atomFromRss(rssFeed(), ORIGIN+"/atom.xml"),{headers:{"content-type":"application/atom+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
-    if(path==="/rss.xml") return new Response(rssFeed(),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
+    if(path==="/atom.xml"||path==="/atom") return new Response(atomFromRss(rssFeed(await loadPosts(env)), ORIGIN+"/atom.xml"),{headers:{"content-type":"application/atom+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
+    if(path==="/rss.xml") return new Response(rssFeed(await loadPosts(env)),{headers:{"content-type":"application/rss+xml;charset=UTF-8"}});
     if(path==="/41990cbcc27241c6b899d18d983370a3.txt") return new Response("41990cbcc27241c6b899d18d983370a3",{headers:{"content-type":"text/plain;charset=UTF-8"}});
     /* 키 없이 열려 있으면 누구나 전체 URL 제출을 반복시킬 수 있다.
        IndexNow 키(INDEXNOW_KEY_SEMOGWA)는 /<key>.txt 로 공개 제공하는 값이라
@@ -1747,12 +1810,18 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.ge
         return new Response("Forbidden",{status:403,headers:{"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}});
       return indexnowPing(url, env, ctx);
     }
-    if(path==="/sitemap.xml") return new Response(sitemapAll(),{headers:{"content-type":"application/xml;charset=UTF-8","cache-control":"public, max-age=3600"}});
+    if(path==="/sitemap.xml") return new Response(sitemapAll(await loadPosts(env)),{headers:{"content-type":"application/xml;charset=UTF-8","cache-control":"public, max-age=3600"}});
     /* 분할 사이트맵은 없앴다. 다만 404 로 끊으면 서치어드바이저·서치콘솔에
        이미 등록돼 있던 주소가 오류로 남으므로 본 사이트맵으로 넘긴다. */
     if(/^\/sitemap-(\d+)\.xml$/.test(path)) return Response.redirect(ORIGIN+"/sitemap.xml",301);
 
     const segs=path.split("/").filter(Boolean);
+    /* 정보성 글 — 지역·과목 슬러그 판정보다 앞에 둔다 */
+    if(segs[0]==="post"){
+      if(segs.length===1) return html(pagePostList(await loadPosts(env)));
+      if(segs.length===2){ const po=await getPost(env,segs[1]); return po?html(pagePost(po)):html(page404(),404); }
+      return html(page404(),404);
+    }
     if(segs.length===0) return html(pageHome());
     if(segs.length===1){
       const a=segs[0];
@@ -1793,6 +1862,13 @@ export default {
     const cycles=Math.ceil(all.length/PER_DAY); // 전체를 다 돌면 처음부터 반복
     const start=(dayNo%cycles)*PER_DAY;
     let batch=all.slice(start,start+PER_DAY);
+    /* 최근 7일 안에 발행된 글은 매일 배치 앞에 실어 색인을 앞당긴다 */
+    try{
+      const fresh=(await loadPosts(env))
+        .filter(p=>p.published_at && Date.now()-Date.parse(p.published_at) < 7*86400000)
+        .map(p=>`${ORIGIN}/post/${p.slug}/`);
+      if(fresh.length) batch=[...fresh, ORIGIN+"/post/", ...batch];
+    }catch(e){}
     if(!batch.length) return;
 
     // 429가 나면 절반으로 줄여 재시도 (최대 4회). 시도마다 결과를 남긴다.
