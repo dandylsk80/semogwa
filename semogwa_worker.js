@@ -1437,7 +1437,7 @@ function pagePostList(posts){
       + `<p class="small" style="color:#9a8b7d;margin-top:6px">${esc(postDate(p))}</p></div>`).join("")
     : `<p style="color:#6b5d50">아직 등록된 글이 없습니다.</p>`;
   const body=`<section class="sec"><div class="wrap"><div class="bc" style="padding-bottom:8px"><a href="/">홈</a> › 과외 정보</div>
-  <h2 style="text-align:left">과외 정보</h2>
+  <h1 style="text-align:left;font-size:26px;line-height:1.35">과외 정보</h1>
   <p style="color:#6b5d50;margin-top:8px">과외를 고르고 준비하는 데 도움이 되는 글을 매주 한 편씩 올립니다.</p>
   <div class="dir">${items}</div></div></section>`;
   return layout({title:`과외 정보 | ${SITE_NAME}`,desc:`과외를 고르고 준비하는 데 필요한 정보를 정리했습니다. ${SITE_NAME}가 매주 한 편씩 올리는 과외 준비 가이드입니다.`,
