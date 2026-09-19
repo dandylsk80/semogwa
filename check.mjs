@@ -157,7 +157,7 @@ if (wanted("라우트") && worker) {
     ["/robots.txt", "text/plain"], ["/llms.txt", "text/plain"],
     ["/sitemap.xml", "xml"], ["/rss.xml", "xml"],
     ["/atom.xml", "xml"], ["/atom", "xml"],
-    ["/favicon.svg", "image/svg"], ["/favicon.ico", "image/svg"], ["/og.svg", "image/svg"],
+    ["/favicon.svg", "image/svg"], ["/favicon.ico", "image/x-icon"], ["/favicon-32.png", "image/png"], ["/apple-touch-icon.png", "image/png"], ["/og.svg", "image/svg"],
     [`/${INDEXNOW_KEY}.txt`, "text/plain"],
   ];
   for (const [p, ct] of must) {
