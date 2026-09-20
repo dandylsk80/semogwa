@@ -773,6 +773,8 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .foot .logo .mk{background:linear-gradient(135deg,#ff7a2e,#ffb35a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 /* 플로팅 연락 버튼 */
 .fab{position:fixed;right:18px;bottom:20px;z-index:90;display:flex;flex-direction:column;gap:10px}
+/* 모바일: 하단 우측은 브라우저 툴바·홈 인디케이터·스크롤 동선과 겹쳐 오터치가 난다 → 화면 세로 중앙 우측으로 */
+@media(max-width:768px){.fab{top:50%;bottom:auto;transform:translateY(-50%);gap:12px}}
 .fab a,.fab button{display:flex;align-items:center;gap:8px;border:0;cursor:pointer;font-weight:800;font-size:14px;padding:13px 18px;border-radius:999px;box-shadow:0 12px 28px -8px rgba(60,30,10,.35);color:#fff;font-family:inherit;text-decoration:none;transition:transform .12s}
 .fab a:hover,.fab button:hover{transform:translateY(-2px)}
 .fab .ic{font-size:17px;line-height:1}
