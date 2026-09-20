@@ -72,6 +72,10 @@ const insertsTo = t => writes.filter(w => new RegExp(`INSERT INTO ${t}\\b`, "i")
 const realFetch = globalThis.fetch;
 let indexnowPosts = [];
 let stubStatus = 202;
+/* 네이버는 폴백 체인 밖에서 따로 나간다 — 제출 횟수를 셀 때 둘을 갈라 본다 */
+const isNaver = (p) => /searchadvisor\.naver\.com/.test(p.url);
+const chainPosts = () => indexnowPosts.filter((p) => !isNaver(p));
+const naverPosts = () => indexnowPosts.filter(isNaver);
 globalThis.fetch = async (u, opt) => {
   const url = String(u && u.url ? u.url : u);
   if (/indexnow/i.test(url)) {
@@ -301,9 +305,11 @@ if (wanted("IndexNow") && worker) {
   fresh();
   const { r, t } = await body(`/indexnow-ping?key=${PING_KEY}&start=0&n=3`);
   check(r.status === 200, "올바른 키로 200", `→ ${r.status}`);
-  check(indexnowPosts.length === 1 && indexnowPosts[0].body.urlList.length === 3,
-    "요청한 만큼만 제출", `→ ${indexnowPosts.length}회 / ${indexnowPosts[0]?.body.urlList.length}건`);
-  check(indexnowPosts[0]?.body.key === INDEXNOW_KEY && indexnowPosts[0]?.body.host === "semogwa.com",
+  check(chainPosts().length === 1 && chainPosts()[0].body.urlList.length === 3,
+    "요청한 만큼만 제출", `→ ${chainPosts().length}회 / ${chainPosts()[0]?.body.urlList.length}건`);
+  check(naverPosts().length === 1 && naverPosts()[0].body.urlList.length === 3,
+    "네이버에도 같은 배치를 따로 제출", `→ ${naverPosts().length}회 / ${naverPosts()[0]?.body.urlList.length}건`);
+  check(chainPosts()[0]?.body.key === INDEXNOW_KEY && chainPosts()[0]?.body.host === "semogwa.com",
     "payload host·key 정상");
   check(t.includes("응답 코드: 202"), "응답 코드 표시", t.split("\n").find(x => x.includes("응답 코드")));
   const man = insertsTo("indexnow_log");
@@ -325,7 +331,8 @@ if (wanted("IndexNow") && worker) {
     check(source === "cron" && count === 1000 && status === 202,
       "cron 기록 내용(하루 1,000건·응답코드)", `→ ${source} ${count}건 ${status}`);
   }
-  check(indexnowPosts.length === 1, "cron 은 성공 시 1회만 제출", `→ ${indexnowPosts.length}회`);
+  check(chainPosts().length === 1, "cron 은 성공 시 1회만 제출", `→ ${chainPosts().length}회`);
+  check(naverPosts().length === 1, "cron 도 네이버에 1회 제출", `→ ${naverPosts().length}회`);
 
   /* 429 면 절반으로 줄여 재시도하고, 그 실패까지 전부 남아야 한다 */
   fresh();
