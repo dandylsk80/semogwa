@@ -781,7 +781,7 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .fab .call{background:#2ec4b6}
 .fab .sms{background:#5b8def}
 .fab .ask{background:linear-gradient(135deg,#e0480a,#ff6a14)}
-@media(max-width:600px){.fab{right:14px;bottom:14px;gap:9px}.fab a,.fab button{padding:15px;border-radius:50%}.fab .lb{display:none}.fab .ic{font-size:20px}}
+@media(max-width:600px){.fab{right:14px;top:50%;bottom:auto;transform:translateY(-50%);gap:12px}.fab a,.fab button{padding:15px;border-radius:50%}.fab .lb{display:none}.fab .ic{font-size:20px}}
 .nav-cta{background:linear-gradient(135deg,#e0480a,#ff6a14);color:#fff;font-weight:700;font-size:14px;padding:10px 18px;border-radius:999px;border:0;cursor:pointer;box-shadow:0 8px 20px -8px rgba(224,72,10,.5)}
 .hero{padding:60px 0 44px;background:radial-gradient(120% 80% at 80% 0%,#ffe9d6 0,transparent 60%),var(--bg)}
 .hero h1{font-size:clamp(28px,5vw,46px);font-weight:900;letter-spacing:-.03em;line-height:1.18}
