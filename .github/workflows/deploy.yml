@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
       - name: 배포 전 검사 7개 항목
         run: node check.mjs --sample 120
 
@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Install Wrangler
         run: npm install -g wrangler
       - name: Deploy
