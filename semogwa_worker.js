@@ -964,7 +964,17 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 
 function jsonld(o){return o.map(x=>`<script type="application/ld+json">${JSON.stringify(x)}</script>`).join("");}
 
+
+/* 모든 페이지 <title> 을 "설명 | 사이트명" 하나로 정규화 (2026-10-08 사이트명 통일) */
+function siteTitle(t){
+  const N=SITE_NAME; const esc=N.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); const SEP="(?:\\s*[-|·—–:]\\s*)";
+  let s=String(t||"").trim();
+  s=s.replace(new RegExp("^"+esc+SEP),"").replace(new RegExp(SEP+esc+"$"),"");
+  s=s.replace(/\s*\|\s*/g," — ").trim();
+  return (s?s+" | ":"")+N;
+}
 function layout({title,desc,canonical,body,ld,image}){
+  title = siteTitle(title);
   const og = image || imgFor(canonical);
   const D = pageDates(canonical);
   const ldArr = (ld||[]).concat([{"@context":"https://schema.org","@type":"Article","headline":title,
