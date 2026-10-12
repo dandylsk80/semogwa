@@ -433,6 +433,8 @@ const IMAGES = [
 "pexels-yangjunjun2-3353747-10906759.jpg","pexels-yaroslav-shuraev-9489804.jpg",
 ];
 function imgFor(seedKey){ return IMG_BASE + IMAGES[hash(seedKey) % IMAGES.length]; }
+// og:image — 같은 사진을 1200×630 으로 크롭한 JPG (image/og/, 파일명 동일). 카카오톡·네이버 미리보기 규격
+function ogFor(seedKey){ return IMG_BASE + "og/" + IMAGES[hash(seedKey) % IMAGES.length]; }
 // 이미지 썸네일 (페이지마다 다른 사진) — 제목 텍스트 반영
 function thumb(seedKey, kw, title, color){
   const img = imgFor(seedKey || kw);
@@ -975,7 +977,7 @@ function siteTitle(t){
 }
 function layout({title,desc,canonical,body,ld,image}){
   title = siteTitle(title);
-  const og = image || imgFor(canonical);
+  const og = image || ogFor(canonical);
   const D = pageDates(canonical);
   const ldArr = (ld||[]).concat([{"@context":"https://schema.org","@type":"Article","headline":title,
     "datePublished":D.pubISO,"dateModified":D.modISO,"image":og,"mainEntityOfPage":canonical,
@@ -1115,7 +1117,7 @@ function pageHome(){
     <button class="btn" onclick="openForm()">무료 상담 신청하기 →</button>
   </div>
 </div></section>`;
-  return layout({title:`${SITE_NAME} · 전국 방문·화상 1:1 과외 매칭`,desc:`전국 ${regions.length.toLocaleString()}개 동네 어디서나 국·영·수·사·과 1:1 과외. 검증된 선생님을 방문·화상으로 연결합니다. 무료 상담 신청.`,canonical:ORIGIN+"/",body,ld,image:heroImg});
+  return layout({title:`${SITE_NAME} · 전국 방문·화상 1:1 과외 매칭`,desc:`전국 ${regions.length.toLocaleString()}개 동네 어디서나 국·영·수·사·과 1:1 과외. 검증된 선생님을 방문·화상으로 연결합니다. 무료 상담 신청.`,canonical:ORIGIN+"/",body,ld,image:ogFor("home-hero-semogwa")});
 }
 
 function pageSubject(s){
