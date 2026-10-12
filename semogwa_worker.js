@@ -315,7 +315,7 @@ const SUBJECTS = [
   { slug:"korean", name:"국어", emoji:"📖", color:"#ff6b35", img:"a.jpg", blurb:"독해·문법·논술까지 국어의 기초를 단단하게" },
   { slug:"english", name:"영어", emoji:"📘", color:"#2ec4b6", img:"b.jpg", blurb:"문법·독해·회화·내신까지 균형 잡힌 영어" },
   { slug:"math", name:"수학", emoji:"📐", color:"#5b8def", img:"c.jpg", blurb:"개념부터 응용까지 수포자도 다시 시작" },
-  { slug:"social", name:"사회", emoji:"🌍", color:"#ff9f1c", img:"d.jpg", blurb:"역사·지리·일반사회를 흐름으로 이해" },
+  { slug:"social", name:"사회", emoji:"🌍", color:"#ff9f1c", img:"24.jpg", blurb:"역사·지리·일반사회를 흐름으로 이해" },
   { slug:"science", name:"과학", emoji:"🔬", color:"#9b5de5", img:"e.jpg", blurb:"물리·화학·생물·지구과학을 원리로" },
 ];
 const SUBJECT_MAP = Object.fromEntries(SUBJECTS.map(s=>[s.slug,s]));
@@ -424,12 +424,12 @@ const IMAGES = [
 "pexels-alfomedeiros-21482854.jpg","pexels-amaria-10990004.jpg","pexels-chipi1189-33964549.jpg",
 "pexels-gu-ko-2150570603-32274998.jpg","pexels-gu-ko-2150570603-35376358.jpg","pexels-ian-panelo-7264404.jpg",
 "pexels-katerina-holmes-5905443.jpg","pexels-ling-app-387368942-14814047.jpg","pexels-long-ba-mui-1130557677-33807234.jpg",
-"pexels-matvei-2160105320-37397514.jpg","pexels-matvei-2160105320-37397517.jpg","pexels-minasenishino-33936499.jpg",
+"pexels-rsk-photography-kekar-1108923782-36048039.jpg","pexels-matvei-2160105320-37397517.jpg","pexels-minasenishino-33936499.jpg",
 "pexels-miniperde-33872172.jpg","pexels-ninosouza-716644.jpg","pexels-pixabay-256417.jpg",
 "pexels-pixabay-256491.jpg","pexels-pixabay-256502.jpg","pexels-ron-lach-9871139.jpg",
 "pexels-ronaldo-guiraldelli-2110705-13042101.jpg","pexels-samarmourya-12365550.jpg",
 "pexels-suzyhazelwood-1098656.jpg","pexels-thu-ngan-pham-550524329-18344347.jpg","pexels-tima-miroshnichenko-9572664.jpg",
-"pexels-tokki-papa-1095148033-20689095.jpg","pexels-won-jong-lee-1966375686-29956386.jpg",
+"pexels-soc-nang-d-ng-2150345854-34438594.jpg","pexels-won-jong-lee-1966375686-29956386.jpg",
 "pexels-yangjunjun2-3353747-10906759.jpg","pexels-yaroslav-shuraev-9489804.jpg",
 ];
 function imgFor(seedKey){ return IMG_BASE + IMAGES[hash(seedKey) % IMAGES.length]; }
