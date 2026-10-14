@@ -801,6 +801,10 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .fab .call{background:#2ec4b6}
 .fab .sms{background:#5b8def}
 .fab .ask{background:linear-gradient(135deg,#e0480a,#ff6a14)}
+/* PC(769px~)는 전화를 걸 수 없으니 tel: 버튼을 숨기고 번호를 일반 텍스트로 보인다. 모바일은 그대로 */
+.telt{display:none}
+@media(min-width:769px){a[href^="tel:"]{display:none!important}.telt{display:inline-flex;align-items:center}
+.fab{align-items:flex-end}.fab .fabt{background:#2ec4b6;color:#fff;font-weight:800;font-size:13px;padding:9px 14px;border-radius:999px;box-shadow:0 12px 28px -8px rgba(60,30,10,.35);white-space:nowrap;justify-content:center}}
 @media(max-width:600px){.fab{right:14px;top:50%;bottom:auto;transform:translateY(-50%);gap:12px}.fab a,.fab button{padding:15px;border-radius:50%}.fab .lb{display:none}.fab .ic{font-size:20px}}
 .nav-cta{background:linear-gradient(135deg,#e0480a,#ff6a14);color:#fff;font-weight:700;font-size:14px;padding:10px 18px;border-radius:999px;border:0;cursor:pointer;box-shadow:0 8px 20px -8px rgba(224,72,10,.5)}
 .hero{padding:60px 0 44px;background:radial-gradient(120% 80% at 80% 0%,#ffe9d6 0,transparent 60%),var(--bg)}
@@ -1019,7 +1023,7 @@ function footer(){
 }
 function fab(){
   return `<div class="fab">
-    <a class="call" href="tel:01068348080"><span class="ic">📞</span><span class="lb">전화</span></a>
+    <a class="call" href="tel:01068348080"><span class="ic">📞</span><span class="lb">전화</span></a><span class="telt fabt">010-6834-8080</span>
     <a class="sms" href="sms:01068348080"><span class="ic">💬</span><span class="lb">문자</span></a>
     <button class="ask" onclick="openForm()"><span class="ic">✏️</span><span class="lb">상담문의</span></button>
   </div>`;
