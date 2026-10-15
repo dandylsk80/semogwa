@@ -1,3 +1,17 @@
+/* /img/<파일> — 자기 저장소 image/ 사진 자체 서빙(2026-10-16): jsDelivr 간헐 503 대비. 허용 목록 → Cache API(IMG_VER) → GitHub raw → jsDelivr 폴백 → 1년 immutable */
+const IMG_ORIGIN="https://semogwa.com";
+const IMG_VER="1";
+const IMG_OK=/^([A-Za-z0-9._-]+\/)?[A-Za-z0-9._-]+\.(jpe?g|png|webp|gif|svg)$/;
+async function imgProxy(request,ctx,p){
+  if(!IMG_OK.test(p)) return new Response("not found",{status:404});
+  let repo="semogwa", rest=p;
+  const ext=p.split(".").pop().toLowerCase(); const ct=ext==="png"?"image/png":ext==="webp"?"image/webp":ext==="gif"?"image/gif":ext==="svg"?"image/svg+xml":"image/jpeg";
+  const key=new Request(IMG_ORIGIN+"/img/"+p+"?v="+IMG_VER,{method:"GET"}); const cache=(typeof caches!=="undefined"&&caches.default)?caches.default:null;
+  if(cache){ try{ const hit=await cache.match(key); if(hit) return hit; }catch(e){} }
+  const srcs=["https://raw.githubusercontent.com/dandylsk80/"+repo+"/main/image/"+rest,"https://cdn.jsdelivr.net/gh/dandylsk80/"+repo+"@main/image/"+rest];
+  for(let i=0;i<srcs.length;i++){ try{ const r=await fetch(srcs[i]); if(r.ok){ const body=await r.arrayBuffer(); const res=new Response(body,{headers:{"content-type":ct,"cache-control":"public, max-age=31536000, immutable","x-img-src":i?"jsd":"raw"}}); if(cache&&ctx&&ctx.waitUntil) ctx.waitUntil(cache.put(key,res.clone())); return res; } }catch(e){} }
+  return new Response("image unavailable",{status:502});
+}
 /* ---------- 파비콘 (18개 공통 규격: ico 16·32·48 / favicon-32.png / apple-touch-icon 180) ----------
    ~/sites/powerlandschool/tools/gen.mjs 로 생성. 경로마다 제 형식의 바이트를 돌려준다. */
 const ICON_ICO  = "AAABAAMAEBAAAAEAIAC9AQAANgAAACAgAAABACAAggMAAPMBAAAwMAAAAQAgAHUFAAB1BQAAiVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAADsOAAA7DgHMtqGDAAABb0lEQVQ4y6WTOUsDQRTH91sIgnUghSD4AayNqF9APCAWQcSjURIbQY0Sr0KxUAOmSMQUnuBFsBLiBrRIZeFJLHIsJmv2SGb272STbNREPPYPD2Z48/+994YZjmMC0MbiioWKn6WWztq4D+b/qrMA4E0Awtwv2/5OCgeTqgA0inTAjZSnD8KSne216nL8AcTNIYhr/SBP0c8Amk4g7XUiPtiM5FiLYaKpGMvF9bV8tIy31V68OhpAhdiXDkqKO6zIbIyWutIgDFggBSeNvBwYh+hsqjFCoZrwgkR3HeSLraJfyUI5WQF5jhpnpMUOKOs9tQHq9TFS9nqQ+5siQMqAJh/1+9FFcpBcVuRPF6oBWb8L4ly7Pp/kGwG5i0DZm0LW2agDCL+D3PYw1AkL8t4u0Ii/AtBUCfLuNDPMQNl3Qz2chZZ4YKYgyKWvOB4fADnzgJ7Pg4ZYB7chA2D6IZl+yjYTgNbyjyxAwn/4zuGy+R3ZLLJYpVv/mAAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAAAlwSFlzAAA7DgAAOw4BzLahgwAAAzRJREFUWMPtl8lPE2EYxvsXqMiiCLIIFAtGL8aLZ88CKcEFowYXFkU2BQUXNiGaGIgJ3vRANMYDhgRRxJhwkhiKgFQjamRrkZa20+k6w8w8fjMtrdAilCBz4U2eQ2eaPr/vXWb6KhR/BYAoogaiT0R2rF+IvzVIVC96KIIFuZFNROP/h+ihDmYuYONC8EF4005j48NKFKnw1lyuqBMBhmQEGBQBbDIC0ArIHJsA/wTgKANcml7Ye574JHBsCNPOg9N/h7u/A+6+dkmstm9lAIFxQZ+nwtTRLZjOIMrcCl3WNszkKVftzXzshKkgCaa8aJjORcN8fhfMF2Pg7GhcGYAZGyDGxDQ7QjLVq8Ogzw6DuSln9Q//9iqYiKmlRAWqWAlLfgyogliwmq6VATjDJNgfgxBYN+jndzGTsx0zx8Jhe9EU8N35Sa2UVlG81ei//nMAvHHCM2vVh0AV7Yb1Uhz4uYnQmtDSnIPfx8MxeyICbs3rgPtU7RFfmrmJkcBy0kbJmL4cB9v1/eSCEBqAsVCF2dxIGE5FgTfrlxyfhSk/3lPfogTymQnMkPY96CvxsJUkwPnoZGhTwJt0krHxdBRMxfsCSzX1BVRpGqiyNNgfqIM3Y89D2MsSYS9PBNvVHBoAo+mG8cwOzJ3dCbold01z7np8AY6KPXBcTQI30h0agKOj2VdfZ+f9NQE4Gw/DWZkMV1UyBPNUaAB0a65vftmhN4El0n0FNzkCnghBHlCCbU4ydt1IgbvhYEADBgXg9GOYHx8GR2SpOOCf3+G3HjP9N293MbCVp3jqW5nqB2Bd4Kc/S+L6n8JdrQRTowTblglBNwpBP0rev8ZlAAihhTSVhZzYkh8LqjDWN79WMkZ0cTycbZ5eEE8tNpZYX1drhj8r2l64xRNLxqlgbqWCvb0X7B0V5muJ6tIgjHYFB+AN47AULDYW53dhjGylCWBe3fMk4MMzOK4lSfVlX9b4x+5dC5ibS4zrVODq08A1pINvTAfmfm2+jhcB0DL6WxXeLUjWP6X1MgLUyrmYUEQRC9uRWobVLGvpfqj2rksbcfKs5TbkSHFdItKs88Ji8/5mrS/t3vgDfIm17c6FknYAAAAASUVORK5CYIKJUE5HDQoaCgAAAA1JSERSAAAAMAAAADAIBgAAAFcC+YcAAAAJcEhZcwAAOw4AADsOAcy2oYMAAAUnSURBVGje7Zr5bxRlHMb3H9ByyCVthV4L0lhr4i8GEzWixSpQLIdFEVGugrWltQo9hB5sS4/EFBIqEmsUDDRt2rUFYimakIAVKP3FVFGUZNnd0mO79+zs7M7jOzPbaWe3u1u6G9gx/Saf33YzzzP5vs/3nXlHofBTAJ4lVBJ6CDqCCw+vXJ5rcteuIKQoplrkx0mENkRetRISg4lPIxgRuWUmrPEnPv0ht0ko7bV6srYxQT7FdUn8RAPtkF+1jIlPhTyL5dPJE5VyrTKFJ2vlWtc4AwMyNqBVyCQ6/UaqAjKvGQMzBh6FAZaywm0ZlQDWHd4pRVnA2owSwLLTM0Dd6obpXA2GVVug35EMzdrHcW8dISMK2vVR0G2cB9bpCEEtC7qvC3Z1HcwN22AoeA4jHy7CyEeEHU/CQBjNWTbpTQpqwG0egWbNY+Oi10WJwrVvz+IZKnwptCwcvIvh7Qt5xoRzog07ORZjdNdiWOo3TK+FqN5L4t0WhAuitZmzoMucDd2G2TA15oZkgP6t3Vf4LkH46O5oGPdEg2otn54Bc0s9BrJTYajbDkvbl7D/fJoXzaHfOAf6TXNg6/omJAP2VhVMJS/C+vVeUF2NcPzSJAo3ZsfAuDcGzhtt01zEbumgpnrUovCBzXMx8M5cOP++6ffvzj9/hb2zQeA84cJx38XodQ366llRuGlfLEwfx8J9/054Usj8Q5kofCDrCdzfuijgArac2C3pb2PxyuChcbZIFG7OiYWlcIXflHtgAwZVpiB8C+HdeTAUvRL40engC5L+5tokWFlr1xLhT8H8iYD92ObwzYGhPUpe+OB7HPNhPpXnPx3tZhKD0ZKF6SA9HrhlGZgLlLDkLhHIWwJaXRkeA64hjSB863yeofcXgLrc5Pf3zB9XeeFCmhDIomRuXwusX9vPi7bkLYV1PyF/KVy96vAYcFzvIKIF4UPbFmD4g4Vg/un1b1j/F+gr30/gNFjaFvAazp5mUbitIA62T+PgHrwTHgPW5kpROL8od8aGNoEnmwktpaJwW2E87KUpAbcpD2TAVLtJMi2Nh1eFfXNGNayHnRP+GUcC6Mas8G3mDLnJkv2J7dv88Kon88BenAz75wmgOA4kguk8Eh4D7mGNz/6Em5h+E8ioB3Orw0MnmL5OssM0B76Gvp8XzeE4SChKgrtPHR4D9M0Oyf6ESxTX3T7/v+9uFGNQWJTx/BY5YMrdaBaFO4qTQJcowQ7/Oz0D1qb9MFWkwVTJsRqmA8/77E+sqtdgrU6H9Wg6bDVv8hEo9vJ3OWKaWPPjQFW/6ps4Z3JAH8sAfdxD1UpROF2qhPOLZWBOZIBpzITrK8LJTLAGzRQMkFU/mqOU5PdE4aZ9McKY50e9MC0teXFgHdbxDZrqZVi5NOETJR70Ga+BxzhAlSwfv9vFSolwnkPLwRwmlD0NVzlBlcoPuqAGuPwWhWcLwk0TNlbc/kQU7mkTW9UqydOUrTCBFy4kSgKYK6ek/a7pG7/bvPAx0eSuewuvWMHjbsqaWgu5dLdBtR3hcXC0qwTUVSL0jx46qnmY662SBew8f5SHuUC4WAPWaxixut/h+qlWoEvAfalunG6Oergv14P1gP6LMw/1EWlA9q8WdTI2cO9/8Xq9XMYGDo0daEOmR0zPjJ2TtcrQwLmJp5SJEX7A7V3kZSzivM+K35DRQXeav9P61z3uEMGfGrwV7HuJeEKLZ5FE0oJt9mmbIEZSPBHLvQfRPoLPbbSea5eJaTNJ/QcSle4VRD1yFwAAAABJRU5ErkJggg==";
@@ -311,7 +325,7 @@ const SIDO_LIST = [
   { slug:"jeju", name:"제주", full:"제주특별자치도" },
 ];
 
-const IMG_MAIN = "https://cdn.jsdelivr.net/gh/dandylsk80/semogwa@main/image/main/";
+const IMG_MAIN = IMG_ORIGIN+"/img/main/";
 const SUBJECTS = [
   { slug:"korean", name:"국어", emoji:"📖", color:"#ff6b35", img:"a.jpg", blurb:"독해·문법·논술까지 국어의 기초를 단단하게" },
   { slug:"english", name:"영어", emoji:"📘", color:"#2ec4b6", img:"b.jpg", blurb:"문법·독해·회화·내신까지 균형 잡힌 영어" },
@@ -420,7 +434,7 @@ function vICards(arr){
   return `<div class="icards">${arr.map((c,i)=>`<div class="ic2" style="background-image:url('${IMG_MAIN}${imgs[i%imgs.length]}')"><b>${c.b}</b><span>${c.s}</span></div>`).join("")}</div>`;
 }
 // 썸네일 이미지 (image/ 폴더의 pexels 사진 — 영문 경로, CDN 로딩 확실). 페이지마다 해시로 다른 사진
-const IMG_BASE = "https://cdn.jsdelivr.net/gh/dandylsk80/semogwa@main/image/";
+const IMG_BASE = IMG_ORIGIN+"/img/";
 const IMAGES = [
 "pexels-alfomedeiros-21482854.jpg","pexels-amaria-10990004.jpg","pexels-chipi1189-33964549.jpg",
 "pexels-gu-ko-2150570603-32274998.jpg","pexels-gu-ko-2150570603-35376358.jpg","pexels-ian-panelo-7264404.jpg",
@@ -898,7 +912,7 @@ img{max-width:100%}a{color:inherit;text-decoration:none}
 .faq-item summary::before{content:"＋";color:var(--brand);font-weight:900;margin-right:10px}
 .faq-item[open] summary::before{content:"－"}
 .faq-a{color:#5a4d42;padding:0 0 16px;font-size:15px}
-.trial{position:relative;margin-top:24px;padding:30px 26px;border-radius:18px;background:linear-gradient(rgba(20,12,6,.34),rgba(20,12,6,.55)),url('https://cdn.jsdelivr.net/gh/dandylsk80/semogwa@main/image/main/33.jpg') center/cover no-repeat;color:#fff;text-align:center;overflow:hidden;box-shadow:0 18px 40px -18px rgba(60,30,10,.5)}
+.trial{position:relative;margin-top:24px;padding:30px 26px;border-radius:18px;background:linear-gradient(rgba(20,12,6,.34),rgba(20,12,6,.55)),url('/img/main/33.jpg') center/cover no-repeat;color:#fff;text-align:center;overflow:hidden;box-shadow:0 18px 40px -18px rgba(60,30,10,.5)}
 .trial b{font-size:19px;font-weight:900;display:block;text-shadow:0 2px 10px rgba(0,0,0,.5)}.trial span{display:block;opacity:.95;margin-top:6px;font-size:15px;text-shadow:0 2px 8px rgba(0,0,0,.5)}
 .trial .btn{margin-top:16px;background:#fff;color:var(--brand)}
 .bc{font-size:13px;color:var(--muted);padding:18px 0 0}.bc a:hover{color:var(--brand)}
@@ -1843,6 +1857,7 @@ const ip=request.headers.get("CF-Connecting-IP")||"";const ua=request.headers.ge
     if(path==="/favicon-32.png") return iconResp(ICON_P32,"image/png");
     if(path==="/favicon-48.png") return iconResp(ICON_P48,"image/png");
     if(path==="/apple-touch-icon.png"||path==="/apple-touch-icon-precomposed.png") return iconResp(ICON_P180,"image/png");
+    if(path.indexOf("/img/")===0) return imgProxy(request,ctx,path.slice(5));
     if(path==="/robots.txt") return new Response(robots(),{headers:{"content-type":"text/plain;charset=UTF-8"}});
     if(path==="/llms.txt"||path==="/llms-full.txt") return new Response(llmsTxt(),{headers:{"content-type":"text/plain;charset=UTF-8","cache-control":"public, max-age=86400"}});
     if(path==="/atom.xml"||path==="/atom") return new Response(atomFromRss(rssFeed(await loadPosts(env)), ORIGIN+"/atom.xml"),{headers:{"content-type":"application/atom+xml; charset=UTF-8","cache-control":"public, max-age=3600"}});
