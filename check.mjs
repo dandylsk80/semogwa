@@ -302,6 +302,17 @@ if (wanted("IndexNow") && worker) {
   check(noSecret.status === 403, "시크릿 미설정이면 403 (fail closed)", `→ ${noSecret.status}`);
   check(indexnowPosts.length === 0, "시크릿 미설정이면 제출도 없음", `→ ${indexnowPosts.length}건`);
 
+  /* 2026-10-30 IndexNow 일시 중지(KST 11/3 까지) — 그동안은 수동·cron 모두 어느 엔드포인트로도 나가지 않아야 한다.
+     중지가 풀리면 아래 원래 검사가 다시 돈다. */
+  const inPaused = Date.now() < Date.parse("2026-11-03T15:00:00Z");
+  if (inPaused) {
+    fresh();
+    await body(`/indexnow-ping?key=${PING_KEY}&start=0&n=3`);
+    await worker.scheduled({}, ENV, CTX);
+    await settle();
+    check(indexnowPosts.length === 0, "일시 중지 중에는 IndexNow 제출 0건(수동·cron)", `→ ${indexnowPosts.length}건`);
+  } else {
+
   fresh();
   const { r, t } = await body(`/indexnow-ping?key=${PING_KEY}&start=0&n=3`);
   check(r.status === 200, "올바른 키로 200", `→ ${r.status}`);
@@ -344,6 +355,7 @@ if (wanted("IndexNow") && worker) {
   check(retry.length === 5, "429 재시도 4회 + 최종 실패까지 기록", `→ ${retry.length}건`);
   check(retry.every(x => x.args[5] === 429), "재시도 기록 응답코드 429");
   check(retry.at(-1)?.args[8]?.includes("실패"), "최종 실패 사유 기록", retry.at(-1)?.args[8]);
+  }
   fresh();
 }
 
