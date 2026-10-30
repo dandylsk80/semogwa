@@ -1,12 +1,23 @@
-/* 2026-10-30 IndexNow 일시 중지(네이버·Bing·yandex 전부) — KST 11/3 까지, 11/4 00:00 KST 부터 자동 재개(네이버는 계속 꺼짐).
-   제출 함수가 사이트마다 달라 이 모듈의 fetch 를 한 곳에서 거른다. IndexNow 엔드포인트만 막고 나머지 요청·사이트맵은 그대로. */
-const INDEXNOW_PAUSE_UNTIL = Date.parse("2026-11-03T15:00:00Z");
-const INDEXNOW_HOST_RE = /^https:\/\/(api\.indexnow\.org|(www\.)?bing\.com|yandex\.com|search\.seznam\.cz|searchadvisor\.naver\.com)\/indexnow/;
-const fetch = (input, init) => {
+/* 2026-10-30 IndexNow 중지 — 재개는 사용자 지시가 있을 때만(날짜로 자동 재개하지 않는다).
+   이 모듈의 IndexNow 요청(api.indexnow.org·bing·yandex·seznam)은 직접 나가지 않고 allcarestudy 관문(/api/indexnow-gate)으로만 간다.
+   관문이 사이트별 재개 여부·하루 200건·바뀐 페이지만을 정한다(재개 목록이 비어 있으면 전부 503). 네이버는 관문에도 보내지 않는다. */
+const INDEXNOW_GATE = "https://allcarestudy.com/api/indexnow-gate";
+const INDEXNOW_HOST_RE = /^https:\/\/(api\.indexnow\.org|(www\.)?bing\.com|yandex\.com|search\.seznam\.cz)\/indexnow/;
+const INDEXNOW_NAVER_RE = /^https:\/\/searchadvisor\.naver\.com\/indexnow/;
+let indexnowLast = null;   /* 폴백 체인이 같은 배치를 엔드포인트마다 다시 보내므로 직전 배치의 관문 응답을 다시 쓴다 */
+const fetch = async (input, init) => {
   const u = typeof input === "string" ? input : (input && input.url) || "";
-  if (Date.now() < INDEXNOW_PAUSE_UNTIL && INDEXNOW_HOST_RE.test(u))
-    return Promise.resolve(new Response("IndexNow paused until 2026-11-03 KST", { status: 503 }));
-  return globalThis.fetch(input, init);
+  if (INDEXNOW_NAVER_RE.test(u)) return new Response("naver IndexNow off", { status: 503 });
+  if (!INDEXNOW_HOST_RE.test(u)) return globalThis.fetch(input, init);
+  const body = init && typeof init.body === "string" ? init.body : "";
+  if (indexnowLast && indexnowLast.body === body) return new Response(indexnowLast.text, { status: indexnowLast.status });
+  let status = 503, text = "IndexNow paused";
+  try {
+    const r = await globalThis.fetch(INDEXNOW_GATE, { method: "POST", headers: { "Content-Type": "application/json; charset=utf-8" }, body });
+    status = r.status; text = await r.text();
+  } catch (e) {}
+  indexnowLast = { body, status, text };
+  return new Response(text, { status });
 };
 
 /* /img/<파일> — 자기 저장소 image/ 사진 자체 서빙(2026-10-16): jsDelivr 간헐 503 대비. 허용 목록 → Cache API(IMG_VER) → GitHub raw → jsDelivr 폴백 → 1년 immutable */

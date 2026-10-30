@@ -302,15 +302,19 @@ if (wanted("IndexNow") && worker) {
   check(noSecret.status === 403, "시크릿 미설정이면 403 (fail closed)", `→ ${noSecret.status}`);
   check(indexnowPosts.length === 0, "시크릿 미설정이면 제출도 없음", `→ ${indexnowPosts.length}건`);
 
-  /* 2026-10-30 IndexNow 일시 중지(KST 11/3 까지) — 그동안은 수동·cron 모두 어느 엔드포인트로도 나가지 않아야 한다.
-     중지가 풀리면 아래 원래 검사가 다시 돈다. */
-  const inPaused = Date.now() < Date.parse("2026-11-03T15:00:00Z");
+  /* 2026-10-30 IndexNow 중지(재개는 사용자 지시 때만) — 워커는 검색엔진으로 직접 보내지 않고
+     allcarestudy 관문(/api/indexnow-gate)으로만 보낸다. 네이버는 관문에도 가지 않는다.
+     아래 else 쪽 원래 검사는 워커가 직접 보내던 시절 것이라 지금은 돌지 않는다. */
+  const inPaused = true;
   if (inPaused) {
     fresh();
     await body(`/indexnow-ping?key=${PING_KEY}&start=0&n=3`);
     await worker.scheduled({}, ENV, CTX);
     await settle();
-    check(indexnowPosts.length === 0, "일시 중지 중에는 IndexNow 제출 0건(수동·cron)", `→ ${indexnowPosts.length}건`);
+    const gate = indexnowPosts.filter((p) => /allcarestudy\.com\/api\/indexnow-gate$/.test(p.url));
+    check(indexnowPosts.length === gate.length, "검색엔진으로 직접 제출 0건(수동·cron)", `→ ${indexnowPosts.length - gate.length}건`);
+    check(gate.length >= 1, "IndexNow 요청은 allcarestudy 관문으로만", `→ ${gate.length}건`);
+    check(naverPosts().length === 0, "네이버는 관문에도 보내지 않음", `→ ${naverPosts().length}건`);
   } else {
 
   fresh();
