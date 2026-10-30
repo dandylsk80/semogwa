@@ -208,10 +208,9 @@ const INDEXNOW_FALLBACK_EPS = ["https://api.indexnow.org/indexnow","https://yand
    루트 URL 하나만 담긴 배치는 422 "Invalid urls" 지만 하위 경로가 섞이면 200 이다(2026-09-21 실측). */
 const INDEXNOW_NAVER_EP = "https://searchadvisor.naver.com/indexnow";
 async function indexnowNaver(body){
-  try{
-    const r=await fetch(INDEXNOW_NAVER_EP,{method:"POST",headers:{"content-type":"application/json; charset=utf-8"},body});
-    return r.status;
-  }catch(e){ return 0; }
+  /* 2026-10-30 네이버 IndexNow 중단(네이버 유입 급감 대응). 보내지 않고 "off" 를 남긴다.
+     새 정보성 글만 allcarestudy 크론(publishDuePosts)이 하루 10건까지 네이버에 보낸다. */
+  return "off";
 }
 
 async function indexnowFetch(opt){
