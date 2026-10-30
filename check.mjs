@@ -307,8 +307,8 @@ if (wanted("IndexNow") && worker) {
   check(r.status === 200, "올바른 키로 200", `→ ${r.status}`);
   check(chainPosts().length === 1 && chainPosts()[0].body.urlList.length === 3,
     "요청한 만큼만 제출", `→ ${chainPosts().length}회 / ${chainPosts()[0]?.body.urlList.length}건`);
-  check(naverPosts().length === 1 && naverPosts()[0].body.urlList.length === 3,
-    "네이버에도 같은 배치를 따로 제출", `→ ${naverPosts().length}회 / ${naverPosts()[0]?.body.urlList.length}건`);
+  /* 2026-10-30 네이버 IndexNow 중단 — 네이버로는 한 건도 나가면 안 된다 */
+  check(naverPosts().length === 0, "네이버로는 제출하지 않음(2026-10-30 중단)", `→ ${naverPosts().length}회`);
   check(chainPosts()[0]?.body.key === INDEXNOW_KEY && chainPosts()[0]?.body.host === "semogwa.com",
     "payload host·key 정상");
   check(t.includes("응답 코드: 202"), "응답 코드 표시", t.split("\n").find(x => x.includes("응답 코드")));
@@ -332,7 +332,7 @@ if (wanted("IndexNow") && worker) {
       "cron 기록 내용(하루 1,000건·응답코드)", `→ ${source} ${count}건 ${status}`);
   }
   check(chainPosts().length === 1, "cron 은 성공 시 1회만 제출", `→ ${chainPosts().length}회`);
-  check(naverPosts().length === 1, "cron 도 네이버에 1회 제출", `→ ${naverPosts().length}회`);
+  check(naverPosts().length === 0, "cron 도 네이버로는 제출하지 않음", `→ ${naverPosts().length}회`);
 
   /* 429 면 절반으로 줄여 재시도하고, 그 실패까지 전부 남아야 한다 */
   fresh();
